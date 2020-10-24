@@ -1,0 +1,11 @@
+[package]
+name = "chelper"
+version = "0.1.0"
+authors = ["István Bozsó <bozso.istvan@csfk.mta.hu>"]
+edition = "2018"
+
+[lib]
+name = "chelp"
+crate-type = ["staticlib", "cdylib"] # Creates static lib
+path = "src/lib.rs"
+[dependencies]
