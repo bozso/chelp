@@ -1,4 +1,5 @@
 use std::{
+    os::raw::c_char,
     result,
     error,
 };
@@ -39,7 +40,7 @@ static SERV: Lazy<service::DefaultService> = Lazy::new(
     || { service::DefaultService::default()}
 );
 
-//#[no_mangle]
-//pub extern fn chelper_init() -> service::CResult {
-    //Ok(0 as service::ID).into()
-//}
+#[no_mangle]
+pub extern fn chelper_string(ptr: *mut c_char) -> service::CResult {
+    SERV.string_service.put(ptr)
+}

@@ -49,7 +49,7 @@ impl<T: Hash> Services<T> {
 */
 
 pub struct Service<DBS: Database<Entry = String>> {
-    string_service: string::Service<DBS>,
+    pub string_service: string::Service<DBS>,
 }
 
 /*

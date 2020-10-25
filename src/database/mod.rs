@@ -1,6 +1,7 @@
-//use std::{
+use std::{
     //hash::Hash,
-//};
+    result::Result,
+};
 
 mod base;
 pub mod default;
@@ -10,7 +11,7 @@ pub use base::Base;
 pub trait Database {
     type Entry;
     
-    fn put(&mut self, entry: Self::Entry);
+    fn put(&mut self, entry: Self::Entry) -> Result<u64>;
     fn get(&self, id: u64) -> Option<&Self::Entry>;
 }
 

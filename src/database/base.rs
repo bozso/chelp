@@ -30,8 +30,10 @@ impl<T: Hash, B: BuildHasher> Base<T, B> {
 impl<T: Hash, B: BuildHasher> Database for Base<T, B> {
     type Entry = T;
     
-    fn put(&mut self, entry: Self::Entry) {
-        self.db.insert(self.calc_id(&entry), entry);
+    fn put(&mut self, entry: Self::Entry) -> Result<u64> {
+        let id = self.calc_id(&entry);
+        self.db.insert(id, entry);
+        id
     }
     
     fn get(&self, id: u64) -> Option<&Self::Entry> {

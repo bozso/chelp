@@ -25,8 +25,8 @@ impl<T: Hash> StdDefault for Default<T, RandomState> {
 impl<T: Hash, B: BuildHasher> Database for Default<T, B> {
     type Entry = T;
     
-    fn put(&mut self, entry: Self::Entry) {
-        self.base.put(entry);
+    fn put(&mut self, entry: Self::Entry) -> Result<u64> {
+        self.base.put(entry)
     }
     
     fn get(&self, id: u64) -> Option<&Self::Entry> {

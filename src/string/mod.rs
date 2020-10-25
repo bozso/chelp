@@ -1,7 +1,7 @@
-//use std::{
-    //os::raw::c_char,
-    //ffi::{CString, CStr},
-//};
+use std::{
+    os::raw::c_char,
+    ffi::{CString, CStr},
+};
 
 use crate::{
     Result as LibResult,
@@ -28,6 +28,10 @@ impl<DB> Service<DB> {
 }
 
 impl<DB: Database<Entry = String>> Service<DB> {
+    pub fn put(&mut self, ptr: *mut c_char) -> Result<ID> {
+        self.db.put(CString::from_raw(ptr).into_string()?)
+    }
+    
     fn concat(&mut self, one: ID, two: ID) -> Result<ID> {
         Ok(0 as ID)
     }
