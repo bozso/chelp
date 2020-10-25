@@ -40,9 +40,9 @@ impl<T> Maker<T> {
 }
 
 impl<T: Hash> DMaker<T> for Maker<T> {
-    type DB = Default<T, RandomState>;
+    type DB = Default<T>;
     
     fn make(&self) -> Self::DB {
-        Default::default()
+        Default::<T>::default()
     }
 }

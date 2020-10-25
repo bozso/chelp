@@ -1,9 +1,14 @@
+use std::{
+    hash::Hash,
+};
+
 use crate::{
     Result as LibResult,
     string,
     //database::{Database, Default},
-    //database::{default, Maker, Database},
-    database::Database,
+    database::{default, Maker, Database},
+    //database::Database,
+    //database::{Maker, Database},
 };
 
 
@@ -33,28 +38,26 @@ impl Into<ID> for Error {
 
 pub type Result<T> = LibResult<T, Error>;
 
-/*
-pub enum Services<T> {
-    Default(Service<default::Default<T>>),
+
+pub enum Services<T: Hash> {
+    phantom(PhantomData<T>),
+    Default(Service<T, default::Default<T>>),
 }
 
-impl<T> Services<T> {
+impl<T: Hash> Services<T> {
     fn default() -> Self {
-        Self::Default(Service::new(default::Maker::new()))
+        Self::Default(Service::new(&default::Maker::new()))
     }
 }
-*/
 
 pub struct Service<T, DB: Database<Entry=T>> {
     string_service: string::Service<DB>,
 }
 
-/*
-impl<DB> Service<DB> {
-    pub fn new<T, M: Maker<T>>(maker: &M) -> Self {
+impl<T, DB: Database<Entry=T>> Service<T, DB> {
+    pub fn new<M: Maker<T, DB=DB>>(maker: &M) -> Self {
         Self {
             string_service: string::Service::new(maker.make()),
         }
     }
 }
-*/

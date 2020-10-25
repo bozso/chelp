@@ -3,9 +3,9 @@ use std::{
     error,
 };
 
-mod database;
+pub mod database;
 mod service;
-mod string;
+pub mod string;
 
 pub use database::{Database};
 
@@ -34,7 +34,7 @@ pub extern fn chelper_get_version() -> VersionInfo {
     return VERSION.clone();
 }
 
-//static serv: service::Services = service::Services::default();
+static serv: service::Services = service::Services::default();
 
 //#[no_mangle]
 //pub extern fn chelper_init() -> service::CResult {

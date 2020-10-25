@@ -1,3 +1,7 @@
+//use std::{
+    //hash::Hash,
+//};
+
 mod base;
 pub mod default;
 
@@ -12,6 +16,5 @@ pub trait Database {
 
 pub trait Maker<T> {
     type DB: Database<Entry = T>;
-    
     fn make(&self) -> Self::DB;
 }
