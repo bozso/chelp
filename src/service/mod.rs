@@ -1,12 +1,21 @@
 use crate::{
     string,
-    database::Database,
+    //database::Database,
 };
 
 mod cservice;
 
-pub use cservice::CService;
+pub use cservice::{CService, ID, CResult, CStatus};
 
-pub struct Services<SS: string::Service> {
-    string_service: SS,
+pub struct Services<DB> {
+    string_service: string::Service<DB>,
+}
+
+
+impl<DB> Services<DB> {
+    pub fn new() -> Self {
+        Self {
+            string_service: string::Service::new(),
+        }
+    }
 }
