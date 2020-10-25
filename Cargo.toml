@@ -8,4 +8,6 @@ edition = "2018"
 name = "chelp"
 crate-type = ["staticlib", "cdylib"] # Creates static lib
 path = "src/lib.rs"
+
 [dependencies]
+thiserror = "1.0"

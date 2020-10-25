@@ -4,22 +4,31 @@
 //};
 
 use crate::{
+    Result as LibResult,
     database::Database,
-    service::{CService, ID},
+    service::ID,
 };
+
+pub enum Error {
+    
+}
+
+type Result<T> = LibResult<T, Error>;
 
 pub struct Service<DB> {
     db: DB,
 }
 
-impl<DB: Database<Entry = String>> Service<DB> {
-    fn concat(&mut self, one: ID, two: ID) -> Result<ID> {
-        
+impl<DB> Service<DB> {
+    pub fn new(db: DB) -> Self {
+        Self {
+            db: db,
+        }
     }
 }
 
-impl<DB: Database<Entry = String>> CService for Service<DB> {
-    fn get(&self, id: ID) -> Option<ID> {
-        self.db.get(id)
+impl<DB: Database<Entry = String>> Service<DB> {
+    fn concat(&mut self, one: ID, two: ID) -> Result<ID> {
+        Ok(0 as ID)
     }
 }

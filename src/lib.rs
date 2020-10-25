@@ -7,7 +7,7 @@ mod database;
 mod service;
 mod string;
 
-pub use database::{Database, Default};
+pub use database::{Database};
 
 pub trait Error : error::Error + Into<service::ID> {}
 
@@ -34,9 +34,9 @@ pub extern fn chelper_get_version() -> VersionInfo {
     return VERSION.clone();
 }
 
-static serv: service::Services<database::Default> = service::Services::new();
+//static serv: service::Services = service::Services::default();
 
-#[no_mangle]
-pub extern fn chelper_init() -> service::CResult {
-    
-}
+//#[no_mangle]
+//pub extern fn chelper_init() -> service::CResult {
+    //Ok(0 as service::ID).into()
+//}
