@@ -1,20 +1,36 @@
 use std::{
     os::raw::c_char,
-    ffi::{CString, CStr},
+    ffi::{CString, IntoStringError},
+    result,
 };
 
 use crate::{
-    Result as LibResult,
+    Error as LibError,
     database::Database,
-    service::{ID, CService},
+    service::ID,
 };
 
+use thiserror::Error as TError;
+
+#[derive(TError, Debug)]
 pub enum Error {
-    
+    #[error("error while converting from pointer: {0}")]
+    ConversionError(#[from] IntoStringError),
 }
 
-type Result<T> = LibResult<T, Error>;
+impl Into<ID> for Error {
+    fn into(self) -> ID {
+        match self {
+            Self::ConversionError(_) => 2,
+        }
+    }
+}
 
+impl LibError for Error {}
+
+type Result<T> = result::Result<T, Error>;
+
+#[derive(Debug)]
 pub struct Service<DB> {
     db: DB,
 }
@@ -22,26 +38,22 @@ pub struct Service<DB> {
 impl<DB> Service<DB> {
     pub fn new(db: DB) -> Self {
         Self {
-            db: db,
+            db,
         }
     }
 }
 
 impl<DB: Database<Entry = String>> Service<DB> {
     pub fn put(&mut self, ptr: *mut c_char) -> Result<ID> {
-        self.db.put(CString::from_raw(ptr).into_string()?)
-    }
-    
-    fn concat(&mut self, one: ID, two: ID) -> Result<ID> {
-        Ok(0 as ID)
+        let cstr = unsafe { CString::from_raw(ptr) };
+        Ok(self.db.put(cstr.into_string()?))
     }
 }
-
-impl<DB: Database<Entry = String>> CService for Service<DB> {
-    type Entry = String;
-    
+/*
+impl<DB: Database<Entry = String, Error = SError>> CService for Service<DB> {
     fn get<'a>(&'a self, id: ID) -> Option<&'a Self::Entry> {
         self.db.get(id)
     }
 
 }
+*/

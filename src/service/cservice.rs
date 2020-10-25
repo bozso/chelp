@@ -1,6 +1,7 @@
+use std::result::Result;
 
 use crate::{
-    service::{Result, Error}
+    service::Error
 };
 
 
@@ -11,7 +12,7 @@ pub trait CService {
 
     fn get<'a>(&'a self, id: ID) -> Option<&'a Self::Entry>;
     
-    fn must_get<'a> (&'a self, id: ID) -> Result<&'a Self::Entry> {
-        self.get(id).ok_or(Error::EntryNotFound{id: id})
+    fn must_get<'a> (&'a self, id: ID) -> Result<&'a Self::Entry, Error> {
+        self.get(id).ok_or(Error::EntryNotFound(id))
     }
 }

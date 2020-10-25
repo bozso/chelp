@@ -5,6 +5,7 @@ use std::{
 
 use crate::database::Database;
 
+#[derive(Debug)]
 pub struct Base<T, B> {
     builder: B,
     db: HashMap<u64, T>,
@@ -13,7 +14,7 @@ pub struct Base<T, B> {
 impl<T: Hash, B> Base<T, B> {
     pub fn new(builder: B) -> Self {
         Self {
-            builder: builder,
+            builder,
             db: HashMap::<u64, T>::new(),
         }
     }
@@ -30,7 +31,7 @@ impl<T: Hash, B: BuildHasher> Base<T, B> {
 impl<T: Hash, B: BuildHasher> Database for Base<T, B> {
     type Entry = T;
     
-    fn put(&mut self, entry: Self::Entry) -> Result<u64> {
+    fn put(&mut self, entry: Self::Entry) -> u64 {
         let id = self.calc_id(&entry);
         self.db.insert(id, entry);
         id

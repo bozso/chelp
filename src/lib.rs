@@ -1,21 +1,21 @@
 use std::{
     os::raw::c_char,
-    result,
     error,
+    sync::{Mutex, MutexGuard, PoisonError},
+    fmt::Debug,
+    result::Result
 };
 
 use once_cell::sync::Lazy;
 
 pub mod database;
-mod service;
+pub mod service;
 pub mod string;
 
 pub use database::{Database};
+pub use service::{CResult, ID};
 
 pub trait Error : error::Error + Into<service::ID> {}
-
-pub type Result<T, E: Error> = result::Result<T, E>;
-
 
 #[repr(C)]
 #[derive(Clone, Debug)]
@@ -34,13 +34,39 @@ const VERSION: VersionInfo = VersionInfo{
 
 #[no_mangle]
 pub extern fn chelper_get_version() -> VersionInfo {
-    return VERSION.clone();
+    VERSION.clone()
 }
-static SERV: Lazy<service::DefaultService> = Lazy::new(
-    || { service::DefaultService::default()}
+
+static SERV: Lazy<Mutex<service::DefaultService>> = Lazy::new(
+    || { Mutex::new(service::DefaultService::default())}
 );
 
+
+use thiserror::Error as TError;
+
+#[derive(TError, Debug)]
+enum LError<T: Debug> {
+    #[error("error while locking: {0}")]
+    Lock(T),
+    #[error("error while managing strings: {0}")]
+    String(#[from] string::Error),
+}
+
+impl<T: Debug> Into<service::ID> for LError<T> {
+    fn into(self) -> service::ID {
+        3
+    }
+}
+
+impl<T: Debug> Error for LError<T> {}
+
 #[no_mangle]
-pub extern fn chelper_string(ptr: *mut c_char) -> service::CResult {
-    SERV.string_service.put(ptr)
+pub extern fn chelper_string(ptr: *mut c_char) -> CResult {
+    string_impl(ptr).into()
+}
+
+fn string_impl<'a>(ptr: *mut c_char) -> Result<ID, Box<dyn Error>> {
+    SERV.lock().map_err(|e| LError::Lock(e))?
+               .string_service.put(ptr)
+    //SERV.lock()?.string_service.put(ptr)
 }

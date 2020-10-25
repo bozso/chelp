@@ -1,9 +1,10 @@
 use std::{
     convert::From,
+    result::Result,
 };
 
 use crate::{
-    Result, Error,
+    Error,
     service::ID,
 };
 
@@ -22,14 +23,14 @@ pub struct CResult {
 impl CResult {
     fn ok(id: ID) -> Self {
         Self {
-            id: id,
+            id,
             status: CStatus::Ok,
         }
     }
 
     fn error(id: ID) -> Self {
         Self {
-            id: id,
+            id,
             status: CStatus::Error,
         }
     }

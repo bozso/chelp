@@ -4,7 +4,6 @@ use std::{
 };
 
 use crate::{
-    Result as LibResult,
     string,
     database::{default, Database},
 };
@@ -20,21 +19,17 @@ use thiserror::Error as TError;
 
 #[derive(TError, Debug)]
 pub enum Error {
-    #[error("entry not found")]
-    EntryNotFound{
-        id: ID,
-    },
+    #[error("entry not found {0}")]
+    EntryNotFound(ID),
 }
 
 impl Into<ID> for Error {
     fn into(self) -> ID {
         match self {
-            Self::EntryNotFound{id: _} => 1,
+            Self::EntryNotFound(_) => 1,
         }
     }
 }
-
-pub type Result<T> = LibResult<T, Error>;
 
 /*
 pub enum Services {
@@ -48,6 +43,7 @@ impl<T: Hash> Services<T> {
 }
 */
 
+#[derive(Debug)]
 pub struct Service<DBS: Database<Entry = String>> {
     pub string_service: string::Service<DBS>,
 }
@@ -76,7 +72,6 @@ impl Default for DefaultService {
     fn default() -> Self {
         Self::new(default::Default::<String>::default())
     }
-    
 }
 
 /*
