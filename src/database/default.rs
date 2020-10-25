@@ -5,7 +5,10 @@ use std::{
     collections::hash_map::RandomState,
 };
 
-use crate::database::{Base, Database, Maker as DMaker};
+use crate::database::{
+    Base, Database,
+    Maker as DMaker,
+};
 
 pub struct Default<T, S = RandomState> {
     base: Base<T, S>,
@@ -39,10 +42,10 @@ impl<T> Maker<T> {
     pub fn new() -> Self { Self{ phantom: PhantomData} }
 }
 
-impl<T: Hash> DMaker<T> for Maker<T> {
-    type DB = Default<T>;
+impl<T: Hash> DMaker<T, Default<T>> for Maker<T> {
+    //type DB = Default<T>;
     
-    fn make(&self) -> Self::DB {
+    fn make(&self) -> Default<T> {
         Default::<T>::default()
     }
 }

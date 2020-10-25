@@ -1,14 +1,12 @@
 use std::{
-    hash::Hash,
+    //hash::Hash,
+    default::Default,
 };
 
 use crate::{
     Result as LibResult,
     string,
-    //database::{Database, Default},
-    database::{default, Maker, Database},
-    //database::Database,
-    //database::{Maker, Database},
+    database::{default, Database},
 };
 
 
@@ -38,10 +36,9 @@ impl Into<ID> for Error {
 
 pub type Result<T> = LibResult<T, Error>;
 
-
-pub enum Services<T: Hash> {
-    phantom(PhantomData<T>),
-    Default(Service<T, default::Default<T>>),
+/*
+pub enum Services {
+    Default(Service<default::Default>),
 }
 
 impl<T: Hash> Services<T> {
@@ -49,15 +46,43 @@ impl<T: Hash> Services<T> {
         Self::Default(Service::new(&default::Maker::new()))
     }
 }
+*/
 
-pub struct Service<T, DB: Database<Entry=T>> {
-    string_service: string::Service<DB>,
+pub struct Service<DBS: Database<Entry = String>> {
+    string_service: string::Service<DBS>,
 }
 
-impl<T, DB: Database<Entry=T>> Service<T, DB> {
-    pub fn new<M: Maker<T, DB=DB>>(maker: &M) -> Self {
+/*
+impl<DB: Database> Service<DB> {
+    pub fn new(makers: &Makers<DB>) -> Self {
         Self {
-            string_service: string::Service::new(maker.make()),
+            string_service: string::Service::new(makers.string.make()),
         }
     }
 }
+*/
+
+impl<DBS: Database<Entry = String>> Service<DBS> {
+    pub fn new(dbs: DBS) -> Self {
+        Self {
+            string_service: string::Service::new(dbs),
+        }
+    }
+}
+
+pub type DefaultService = Service<default::Default::<String>>;
+
+impl Default for DefaultService {
+    fn default() -> Self {
+        Self::new(default::Default::<String>::default())
+    }
+    
+}
+
+/*
+impl<default::Default::<String>> Default for Service<default::Default::<String>> {
+    fn default() -> Self {
+        Self::new(default::Default::<String>::default())
+    }
+}
+*/

@@ -3,6 +3,8 @@ use std::{
     error,
 };
 
+use once_cell::sync::Lazy;
+
 pub mod database;
 mod service;
 pub mod string;
@@ -33,8 +35,9 @@ const VERSION: VersionInfo = VersionInfo{
 pub extern fn chelper_get_version() -> VersionInfo {
     return VERSION.clone();
 }
-
-static serv: service::Services = service::Services::default();
+static SERV: Lazy<service::DefaultService> = Lazy::new(
+    || { service::DefaultService::default()}
+);
 
 //#[no_mangle]
 //pub extern fn chelper_init() -> service::CResult {
