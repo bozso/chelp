@@ -1,5 +1,7 @@
 mod database;
 
+pub use database::{Database, Default};
+
 #[repr(C)]
 #[derive(Clone)]
 pub struct VersionInfo {

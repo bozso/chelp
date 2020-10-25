@@ -1,18 +1,12 @@
-use std::{
-    hash::Hasher
-};
+mod base;
+mod default;
 
-mod database;
-
-pub use database::Default;
-
-pub trait HashMaker<H: Hasher> {
-    fn make(&self) -> H;
-}
+pub use base::Base;
+pub use default::Default;
 
 pub trait Database {
     type Entry;
     
-    fn put(& mut self, entry: Self::Entry);
+    fn put(&mut self, entry: Self::Entry);
     fn get(&self, id: u64) -> Option<&Self::Entry>;
 }
