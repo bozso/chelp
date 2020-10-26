@@ -46,8 +46,8 @@ pub extern fn chelp_string(ptr: *mut c_char) -> CResult {
 }
 
 fn string_impl(ptr: *mut c_char) -> Result<ID> {
-    SERV.lock().map_err(|e| Error::LockFail)?
+    SERV.lock().map_err(|_| Error::LockFail)?
                .string_service.put(ptr)
-               .map_err(|e| Error::String(e))
+               .map_err(Error::String)
 }
 
