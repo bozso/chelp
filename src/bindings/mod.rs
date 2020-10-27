@@ -45,13 +45,17 @@ fn lock<'a>() -> Result<MutexGuard<'a, service::DefaultService>> {
     SERV.lock().map_err(|_| Error::LockFail)    
 }
 
-fn doit<T, F: FnMut() -> Result<T>>(mut func: F) -> CResult {
+fn do_id<F: FnMut() -> Result<ID>>(mut func: F) -> CResult {
+    func().into()
+}
+
+fn do_it<F: FnMut() -> Result<()>>(mut func: F) -> CResult {
     func().into()
 }
 
 #[no_mangle]
 pub extern fn chelp_intern_string(ptr: *mut c_char) -> CResult {
-    doit(|| {
+    do_id(|| {
         lock()?.string_service.put(ptr).map_err(Error::String)
     })
 }
@@ -66,7 +70,7 @@ fn string_impl(ptr: *mut c_char) -> Result<ID> {
 
 #[no_mangle]
 pub extern fn chelp_concat_strings(one: ID, two: ID) -> CResult {
-    doit(|| {
+    do_id(|| {
         lock()?.string_service.concat(one, two).map_err(Error::String)
     })
 }
@@ -75,7 +79,7 @@ use std::io::Write;
 
 #[no_mangle]
 pub extern fn chelp_dump_db() -> CResult {
-    doit(|| {
+    do_it(|| {
         write!(std::io::stdout(), "Database: {:?}\n", lock()?)
             .map_err(|e| Error::IOError(e))
     })

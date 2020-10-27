@@ -27,6 +27,12 @@ int main(void) {
     }
     
     printf("IDs: %lu,%lu,%lu\n", r1.id, r2.id, r3.id);
+    CResult r = chelp_dump_db();
+
+    if (r.status == Error) {
+        fprintf(stderr, "error\n");
+        return 1;
+    }
     
     return 0;
 }
