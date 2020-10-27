@@ -45,25 +45,46 @@ fn lock<'a>() -> Result<MutexGuard<'a, service::DefaultService>> {
     SERV.lock().map_err(|_| Error::LockFail)    
 }
 
-#[no_mangle]
-pub extern fn chelp_intern_string(ptr: *mut c_char) -> CResult {
-    string_impl(ptr).into()
+fn doit<T, F: FnMut() -> Result<T>>(mut func: F) -> CResult {
+    func().into()
 }
 
+#[no_mangle]
+pub extern fn chelp_intern_string(ptr: *mut c_char) -> CResult {
+    doit(|| {
+        lock()?.string_service.put(ptr).map_err(Error::String)
+    })
+}
+
+/*
 fn string_impl(ptr: *mut c_char) -> Result<ID> {
     SERV.lock().map_err(|_| Error::LockFail)?
                .string_service.put(ptr)
                .map_err(Error::String)
 }
+*/
 
 #[no_mangle]
 pub extern fn chelp_concat_strings(one: ID, two: ID) -> CResult {
-    concat_impl(one, two).into()
+    doit(|| {
+        lock()?.string_service.concat(one, two).map_err(Error::String)
+    })
 }
 
+use std::io::Write;
+
+#[no_mangle]
+pub extern fn chelp_dump_db() -> CResult {
+    doit(|| {
+        write!(std::io::stdout(), "Database: {:?}\n", lock()?)
+            .map_err(|e| Error::IOError(e))
+    })
+}
+
+/*
 fn concat_impl(one: ID, two: ID) -> Result<ID> {
     lock()?.string_service.concat(one, two)
            .map_err(Error::String)
 }
-
+*/
 

@@ -16,5 +16,6 @@ once_cell = { version = "1.4" }
 #[dev-dependencies]
 
 [build-dependencies]
+thiserror = "1.0"
 cbindgen = "0.15.0"
 cc = "1.0.61"

@@ -21,8 +21,12 @@ typedef struct {
   CStatus status;
 } CResult;
 
+#define OK 0
+
 VersionInfo chelp_get_version(void);
 
 CResult chelp_intern_string(char *ptr);
 
 CResult chelp_concat_strings(ID one, ID two);
+
+CResult chelp_dump_db(void);

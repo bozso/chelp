@@ -8,6 +8,8 @@ use crate::{
     service::ID,
 };
 
+pub const OK: ID = 0;
+
 #[repr(C)]
 pub enum CStatus {
     Ok,
@@ -40,6 +42,15 @@ impl<E: Error> From<Result<ID, E>> for CResult {
     fn from(r: Result<ID, E>) -> Self {
         match r {
             Ok(ok) => CResult::ok(ok),
+            Err(err) => CResult::error(err.into()),
+        }
+    }
+}
+
+impl<E: Error> From<Result<(), E>> for CResult {
+    fn from(r: Result<(), E>) -> Self {
+        match r {
+            Ok(()) => CResult::ok(OK),
             Err(err) => CResult::error(err.into()),
         }
     }

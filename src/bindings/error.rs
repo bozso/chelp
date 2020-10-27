@@ -14,8 +14,13 @@ pub enum Error {
     LockFail,
     #[error("error while managing strings: {0}")]
     String(#[from] string::Error),
+    #[error("io error occurred: {0}")]
+    IOError(#[from] std::io::Error),
 }
 
+/**
+ * \TODO: properly handle different error types
+ */
 impl Into<service::ID> for Error {
     fn into(self) -> service::ID {
         3
