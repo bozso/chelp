@@ -13,8 +13,8 @@ path = "src/lib.rs"
 thiserror = "1.0"
 once_cell = { version = "1.4" }
 
-[dev-dependencies]
-cc = "1.0.61"
+#[dev-dependencies]
 
 [build-dependencies]
 cbindgen = "0.15.0"
+cc = "1.0.61"
