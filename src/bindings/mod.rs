@@ -1,12 +1,16 @@
 use std::{
     sync::{Mutex, MutexGuard},
     os::raw::c_char,
+    io::Write,
     result,
 };
+
+use once_cell::sync::Lazy;
 
 use crate::{
     service,
     service::{ID, CResult},
+    database::Database,
 };
 
 mod error;
@@ -34,12 +38,9 @@ pub extern fn chelp_get_version() -> VersionInfo {
     VERSION.clone()
 }
 
-use once_cell::sync::Lazy;
-
 static SERV: Lazy<Mutex<service::DefaultService>> = Lazy::new(
     || { Mutex::new(service::DefaultService::default())}
 );
-
 
 fn lock<'a>() -> Result<MutexGuard<'a, service::DefaultService>> {
     SERV.lock().map_err(|_| Error::LockFail)    
@@ -54,28 +55,26 @@ fn do_it<F: FnMut() -> Result<()>>(mut func: F) -> CResult {
 }
 
 #[no_mangle]
-pub extern fn chelp_intern_string(ptr: *mut c_char) -> CResult {
+pub extern fn chelp_string_intern(ptr: *const c_char) -> CResult {
     do_id(|| {
         lock()?.string_service.put(ptr).map_err(Error::String)
     })
 }
 
-/*
-fn string_impl(ptr: *mut c_char) -> Result<ID> {
-    SERV.lock().map_err(|_| Error::LockFail)?
-               .string_service.put(ptr)
-               .map_err(Error::String)
-}
-*/
-
 #[no_mangle]
-pub extern fn chelp_concat_strings(one: ID, two: ID) -> CResult {
+pub extern fn chelp_string_concat(one: ID, two: ID) -> CResult {
     do_id(|| {
         lock()?.string_service.concat(one, two).map_err(Error::String)
     })
 }
 
-use std::io::Write;
+#[no_mangle]
+pub extern fn chelp_string_remove(id: ID) -> CResult {
+    do_it(|| {
+        lock()?.string_service.remove(id);
+        Ok(())
+    })
+}
 
 #[no_mangle]
 pub extern fn chelp_dump_db() -> CResult {
@@ -84,11 +83,3 @@ pub extern fn chelp_dump_db() -> CResult {
             .map_err(|e| Error::IOError(e))
     })
 }
-
-/*
-fn concat_impl(one: ID, two: ID) -> Result<ID> {
-    lock()?.string_service.concat(one, two)
-           .map_err(Error::String)
-}
-*/
-

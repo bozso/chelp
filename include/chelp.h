@@ -25,8 +25,10 @@ typedef struct {
 
 VersionInfo chelp_get_version(void);
 
-CResult chelp_intern_string(char *ptr);
+CResult chelp_string_intern(const char *ptr);
 
-CResult chelp_concat_strings(ID one, ID two);
+CResult chelp_string_concat(ID one, ID two);
+
+CResult chelp_string_remove(ID id);
 
 CResult chelp_dump_db(void);
