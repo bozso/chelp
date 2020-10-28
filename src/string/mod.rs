@@ -1,6 +1,6 @@
 use std::{
     os::raw::c_char,
-    ffi::{CString, IntoStringError},
+    ffi::{CStr, IntoStringError},
     result,
 };
 
@@ -48,24 +48,33 @@ impl<DB> Service<DB> {
 }
 
 impl<DB: Database<Entry = String>> Service<DB> {
-    pub fn put(&mut self, ptr: *mut c_char) -> Result<ID> {
-        let cstr = unsafe { CString::from_raw(ptr) };
-        Ok(self.db.put(cstr.into_string()?))
+    pub fn put(&mut self, ptr: *const c_char) -> Result<ID> {
+        let cstr = unsafe { CStr::from_ptr(ptr) };
+        Ok(self.db.insert(cstr.to_string_lossy().into_owned()))
     }
     
     pub fn concat(&mut self, one: ID, two: ID) -> Result<ID> {
         let concatted = 
             self.must_get(one)?.to_owned() + self.must_get(two)?;
         
-        Ok(self.db.put(concatted))
+        Ok(self.db.insert(concatted))
     }
 }
 
-impl<DB: Database<Entry = String>> CService for Service<DB> {
+impl<DB: Database<Entry = String>> Database for Service<DB> {
     type Entry = String;
     
-    fn get<'a>(&'a self, id: ID) -> Option<&'a Self::Entry> {
+    fn get(&self, id: ID) -> Option<&Self::Entry> {
         self.db.get(id)
     }
-
+    
+    fn insert(&mut self, entry: Self::Entry) -> ID {
+        self.db.insert(entry)
+    }
+    
+    fn remove(&mut self, id: ID) {
+        self.db.remove(id)
+    }
 }
+
+impl<DB: Database<Entry = String>> CService<String> for Service<DB> {}

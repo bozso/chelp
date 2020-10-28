@@ -4,8 +4,11 @@ use std::{
     collections::hash_map::RandomState,
 };
 
-use crate::database::{
-    Base, Database
+use crate::{
+    database::{
+        Base, Database
+    },
+    service,
 };
 
 #[derive(Debug)]
@@ -23,11 +26,16 @@ impl<T: Hash> StdDefault for Default<T, RandomState> {
 
 impl<T: Hash, B: BuildHasher> Database for Default<T, B> {
     type Entry = T;
-    fn put(&mut self, entry: Self::Entry) -> u64 {
-        self.base.put(entry)
+    
+    fn insert(&mut self, entry: Self::Entry) -> service::ID {
+        self.base.insert(entry)
     }
     
-    fn get(&self, id: u64) -> Option<&Self::Entry> {
+    fn get(&self, id: service::ID) -> Option<&Self::Entry> {
         self.base.get(id)
+    }
+
+    fn remove(&mut self, id: service::ID) {
+        self.base.remove(id)
     }
 }

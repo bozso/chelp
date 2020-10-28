@@ -7,10 +7,14 @@ pub mod default;
 
 pub use base::Base;
 
+use crate::service::ID;
+
 pub trait Database {
     type Entry;
-    fn put(&mut self, entry: Self::Entry) -> u64;
-    fn get(&self, id: u64) -> Option<&Self::Entry>;
+    
+    fn get(&self, id: ID) -> Option<&Self::Entry>;
+    fn insert(&mut self, entry: Self::Entry) -> ID;
+    fn remove(&mut self, id: ID);
 }
 
 pub trait Type<T> {

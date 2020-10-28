@@ -47,9 +47,10 @@ def main():
         "../include"
     ]
     
-    link_dirs = [
-        "../target/debug",
-    ]
+    link_dirs = {
+        "debug": "../target/debug",
+        "release": "../target/release",
+    }
     
     libs = [
         # "chelp",
@@ -60,15 +61,19 @@ def main():
         for key, val in defaults.items()
     }
     
-    env["cflags"] += " %s" % join_fmt("-I%s", include_dirs)
+    env["cflags"] += " -g %s" % join_fmt("-I%s", include_dirs)
 
+    mode = "debug"
+    
+    link_dirs = (link_dirs[mode],)
+    
     env["ldflags"] = "%s %s %s" % (
         join_fmt("-L%s", link_dirs),
         join_fmt("-l%s", libs),
         env["ldflags"],
     )
     
-    pprint(env)
+    # pprint(env)
     # exit()
     
     for src, obj in zip(srcs, objs):

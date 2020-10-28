@@ -3,7 +3,10 @@ use std::{
     hash::{Hasher, Hash, BuildHasher},
 };
 
-use crate::database::Database;
+use crate::{
+    database::Database,
+    service,
+};
 
 #[derive(Debug)]
 pub struct Base<T, B> {
@@ -31,13 +34,17 @@ impl<T: Hash, B: BuildHasher> Base<T, B> {
 impl<T: Hash, B: BuildHasher> Database for Base<T, B> {
     type Entry = T;
     
-    fn put(&mut self, entry: Self::Entry) -> u64 {
+    fn insert(&mut self, entry: Self::Entry) -> service::ID {
         let id = self.calc_id(&entry);
         self.db.insert(id, entry);
         id
     }
     
-    fn get(&self, id: u64) -> Option<&Self::Entry> {
+    fn remove(&mut self, id: service::ID) {
+        self.db.remove(&id);
+    }
+    
+    fn get(&self, id: service::ID) -> Option<&Self::Entry> {
         self.db.get(&id)
     }
     
