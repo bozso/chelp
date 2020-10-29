@@ -6,7 +6,8 @@ use std::{
 pub mod database;
 pub mod service;
 pub mod string;
-mod bindings;
+pub mod bindings;
+pub mod io;
 
 pub use database::{Database};
 pub use service::{CResult, ID};

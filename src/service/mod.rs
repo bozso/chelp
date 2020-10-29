@@ -5,6 +5,7 @@ use std::{
 
 use crate::{
     string,
+    io,
     database::{default, Database},
 };
 
@@ -44,8 +45,13 @@ impl<T: Hash> Services<T> {
 */
 
 #[derive(Debug)]
-pub struct Service<DBS: Database<Entry = String>> {
-    pub string_service: string::Service<DBS>,
+pub struct Service<S, F>
+where
+    S: Database<Entry = String>,
+    F: Database<Entry = std::fs::File>,
+{
+    pub string_service: string::Service<S>,
+    pub file_service: io::Service<F>,
 }
 
 /*
@@ -58,19 +64,30 @@ impl<DB: Database> Service<DB> {
 }
 */
 
-impl<DBS: Database<Entry = String>> Service<DBS> {
-    pub fn new(dbs: DBS) -> Self {
+impl<S, F> Service<S, F>
+where
+    S: Database<Entry = String>,
+    F: Database<Entry = std::fs::File>,
+{
+    pub fn new(s: S, f: F) -> Self {
         Self {
-            string_service: string::Service::new(dbs),
+            string_service: string::Service::new(s),
+            file_service: io::Service::new(f),
         }
     }
 }
 
-pub type DefaultService = Service<default::Default::<String>>;
+pub type DefaultService = Service<
+    default::Default::<String>,
+    default::Default::<std::fs::File>,
+>;
 
 impl Default for DefaultService {
     fn default() -> Self {
-        Self::new(default::Default::<String>::default())
+        Self::new(
+            default::Default::<String>::default(),
+            default::Default::<std::fs::File>::default()
+        )
     }
 }
 
