@@ -3,6 +3,7 @@ use std::{
 };
 
 mod base;
+pub mod indirect;
 pub mod default;
 
 pub use base::Base;
@@ -10,34 +11,41 @@ pub use base::Base;
 use crate::service::ID;
 
 pub trait Creator: Hash {
-    type Result;
+    type Entry;
+    type Error: std::error::Error;
     
-    fn create(&self) -> Self::Result;
+    fn create(&self) -> Result<Self::Entry, Self::Error>;
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    #[error("entry not found {0}")]
+    EntryNotFound(ID),
+}
+
+impl Into<ID> for Error {
+    fn into(self) -> ID {
+        match self {
+            Self::EntryNotFound(_) => 1,
+        }
+    }
 }
 
 pub trait Database {
     type Entry;
     
     fn get(&self, id: ID) -> Option<&Self::Entry>;
-    fn insert(&mut self, entry: Self::Entry) -> ID;
+    fn insert(&mut self, id: ID, entry: Self::Entry);
     fn remove(&mut self, id: ID);
-}
-
-pub trait LazyInsert: Database {
-    type Create: Creator;
-    
-    fn calc_id(&self, creator: &Self::Create) -> ID;
     fn contains(&self, id: ID) -> bool;
     
-    fn lazy_insert(&mut self, creator: Self::Create) -> Self::Create::Result {
-        let id = self.calc_id(&creator);
-        
-        if self.contains(id) {
-            Ok(id)
-        } else {
-            self.insert(creator.create()?)
-        }
+    fn must_get(&self, id: ID) -> Result<&Self::Entry, Error> {
+        self.get(id).ok_or(Error::EntryNotFound(id))
     }
+}
+
+pub trait AutoHash: Database {
+    fn insert_auto(&mut self, entry: Self::Entry) -> ID;
 }
 
 pub trait Type<T> {

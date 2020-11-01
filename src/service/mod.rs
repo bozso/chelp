@@ -1,92 +1,61 @@
 use std::{
-    //hash::Hash,
+    hash::BuildHasher,
     default::Default,
+    collections::hash_map::RandomState,
 };
 
 use crate::{
     string,
     io,
-    database::{default, Database},
+    database::{
+        default,
+        Base,
+        Database,
+        indirect
+    },
 };
 
 
-mod cservice;
 mod cresult;
 
-pub use cservice::{CService, ID};
+pub type ID = u64;
+
 pub use cresult::{CResult, CStatus};
 
-use thiserror::Error as TError;
-
-#[derive(TError, Debug)]
-pub enum Error {
-    #[error("entry not found {0}")]
-    EntryNotFound(ID),
-}
-
-impl Into<ID> for Error {
-    fn into(self) -> ID {
-        match self {
-            Self::EntryNotFound(_) => 1,
-        }
-    }
-}
-
-/*
-pub enum Services {
-    Default(Service<default::Default>),
-}
-
-impl<T: Hash> Services<T> {
-    fn default() -> Self {
-        Self::Default(Service::new(&default::Maker::new()))
-    }
-}
-*/
-
 #[derive(Debug)]
-pub struct Service<S, F>
-where
-    S: Database<Entry = String>,
-    F: Database<Entry = std::fs::File>,
+pub struct Service<B, S, F>
 {
     pub string_service: string::Service<S>,
-    pub file_service: io::Service<F>,
+    pub file_service: io::Service<B, F>,
 }
 
-/*
-impl<DB: Database> Service<DB> {
-    pub fn new(makers: &Makers<DB>) -> Self {
-        Self {
-            string_service: string::Service::new(makers.string.make()),
-        }
-    }
-}
-*/
-
-impl<S, F> Service<S, F>
+impl<B, S, F> Service<B, S, F>
 where
+    B: BuildHasher,
     S: Database<Entry = String>,
     F: Database<Entry = std::fs::File>,
 {
-    pub fn new(s: S, f: F) -> Self {
+    pub fn new(b: B, s: S, f: F) -> Self {
         Self {
             string_service: string::Service::new(s),
-            file_service: io::Service::new(f),
+            file_service: io::Service::new(
+                indirect::Indirect::new(b, f)
+            ),
         }
     }
 }
 
-pub type DefaultService = Service<
+pub type DefaultService = Service<RandomState, 
     default::Default::<String>,
-    default::Default::<std::fs::File>,
+    Base::<std::fs::File>,
 >;
 
 impl Default for DefaultService {
     fn default() -> Self {
         Self::new(
+            std::collections::hash_map::RandomState::new(),
             default::Default::<String>::default(),
-            default::Default::<std::fs::File>::default()
+            Base::<std::fs::File>::new(),
         )
     }
 }

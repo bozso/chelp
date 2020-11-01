@@ -1,11 +1,17 @@
 use std::{
+    hash,
     path::Path,
+    fs::File,
     convert::AsRef,
+    collections::hash_map::RandomState,
 };
 
 use crate::{
-    database as db,
-    service::{ID, CService},
+    database::{
+        Database,
+        indirect::Indirect,
+    },
+    service::ID,
 };
 
 #[derive(thiserror::Error, Debug)]
@@ -17,57 +23,64 @@ pub enum Error {
 pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug)]
-pub struct Service<DB> {
-    db: DB,
+pub struct Service<B, DB> {
+    indir: Indirect<File, B, DB>,
 }
 
-impl<DB> Service<DB> {
-    pub fn new(db: DB) -> Self {
+impl<B, DB> Service<B, DB> {
+    pub fn new(indir: Indirect<File, B, DB>) -> Self {
         Self {
-            db,
+            indir,
         }
     }
 }
 
-enum ReadWrite {
-    Read(Box<dyn std::io::Read>),
-    Write(Box<dyn std::io::Write>),
-}
-
-impl<DB: db::Database<Entry = std::fs::File>> Service<DB> {
-    fn lazy_put<F>(&mut self, f: F, id: ID) -> Result<()>
-    where
-        F: Fn() -> std::io::Result<std::fs::File>
-    {
-        
-    }
-    
-    pub fn open<P: AsRef<Path>>(&mut self, path: P) -> Result<ID> {
-        Ok(self.db.insert(std::fs::File::open(path)?))
-    }
-
-    pub fn create<P: AsRef<Path>>(&mut self, path: P) -> Result<ID> {
-        Ok(self.db.insert(std::fs::File::create(path)?))
+impl<DB: Database<Entry = File>> Service<RandomState, DB> {
+    pub fn with_db(db: DB) -> Self {
+        Self::new(Indirect::with_db(db))
     }
 }
 
-type DBEntry = std::fs::File;
+impl<B, DB> Service<B, DB>
+where
+    B: hash::BuildHasher,
+    DB: Database<Entry = std::fs::File>
+{
+    pub fn open<P: HashPath>(&mut self, path: P) -> Result<ID> {
+        Ok(self.indir.lazy_insert(
+            &Creator{path: path, mode: Mode::Open})?
+        )
+    }
 
-impl<DB: db::Database<Entry = DBEntry>> db::Database for Service<DB> {
-    type Entry = DBEntry;
-    
-    fn get(&self, id: ID) -> Option<&Self::Entry> {
-        self.db.get(id)
-    }
-    
-    fn insert(&mut self, entry: Self::Entry) -> ID {
-        self.db.insert(entry)
-    }
-    
-    fn remove(&mut self, id: ID) {
-        self.db.remove(id)
+    pub fn create<P: HashPath>(&mut self, path: P) -> Result<ID> {
+        Ok(self.indir.lazy_insert(
+            &Creator{path: path, mode: Mode::Create})?
+        )
     }
 }
 
-impl<DB: db::Database<Entry = DBEntry>> CService<DBEntry> for Service<DB> {}
+#[derive(Debug, Hash)]
+pub enum Mode {
+    Create,
+    Open,
+}
 
+pub trait HashPath : AsRef<Path> + hash::Hash {}
+
+#[derive(Debug, Hash)]
+pub struct Creator<P> {
+    path: P,
+    mode: Mode,
+}
+
+impl<P: HashPath> crate::database::Creator for Creator<P> {
+    type Entry = File;
+    type Error = std::io::Error;
+    
+    fn create(&self) -> std::result::Result<Self::Entry, Self::Error> {
+        match self.mode {
+            Mode::Create => File::create(&self.path),
+            Mode::Open => File::open(&self.path),
+        }
+    }
+}
