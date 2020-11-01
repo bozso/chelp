@@ -1,6 +1,7 @@
 use std::{
     sync::{Mutex, MutexGuard},
     os::raw::c_char,
+    ffi::CStr,
     io::Write,
     result,
 };
@@ -10,7 +11,6 @@ use once_cell::sync::Lazy;
 use crate::{
     service,
     service::{ID, CResult},
-    database::Database,
 };
 
 mod error;
@@ -72,6 +72,25 @@ pub extern fn chelp_string_concat(one: ID, two: ID) -> CResult {
 pub extern fn chelp_string_remove(id: ID) -> CResult {
     do_it(|| {
         lock()?.string_service.remove(id);
+        Ok(())
+    })
+}
+
+#[no_mangle]
+pub extern fn chelp_file_open(ptr: *const c_char) -> CResult {
+    do_id(|| {
+        let s = unsafe { CStr::from_ptr(ptr) };
+        lock()?
+            .file_service
+            .open(s.to_string_lossy().into_owned())
+            .map_err(Error::CIOError)
+    })
+}
+
+#[no_mangle]
+pub extern fn chelp_file_close(id: ID) -> CResult {
+    do_it(|| {
+        lock()?.file_service.must_remove(id)?;
         Ok(())
     })
 }

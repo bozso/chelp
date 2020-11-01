@@ -36,11 +36,16 @@ pub trait Database {
     
     fn get(&self, id: ID) -> Option<&Self::Entry>;
     fn insert(&mut self, id: ID, entry: Self::Entry);
-    fn remove(&mut self, id: ID);
+    fn remove(&mut self, id: ID) -> Option<Self::Entry>;
+    
     fn contains(&self, id: ID) -> bool;
     
     fn must_get(&self, id: ID) -> Result<&Self::Entry, Error> {
         self.get(id).ok_or(Error::EntryNotFound(id))
+    }
+
+    fn must_remove(&mut self, id: ID) -> Result<Self::Entry, Error> {
+        self.remove(id).ok_or(Error::EntryNotFound(id))
     }
 }
 

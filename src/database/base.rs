@@ -28,8 +28,8 @@ impl<T> Database for Base<T> {
         self.db.insert(id, entry);
     }
     
-    fn remove(&mut self, id: service::ID) {
-        self.db.remove(&id);
+    fn remove(&mut self, id: service::ID) -> Option<Self::Entry> {
+        self.db.remove(&id)
     }
     
     fn get(&self, id: service::ID) -> Option<&Self::Entry> {

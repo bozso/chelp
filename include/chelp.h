@@ -31,4 +31,8 @@ CResult chelp_string_concat(ID one, ID two);
 
 CResult chelp_string_remove(ID id);
 
+CResult chelp_file_open(const char *ptr);
+
+CResult chelp_file_close(ID id);
+
 CResult chelp_dump_db(void);

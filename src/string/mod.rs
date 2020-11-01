@@ -56,7 +56,7 @@ impl<DB: db::AutoHash<Entry = String>> Service<DB> {
         Ok(self.db.insert_auto(concatted))
     }
 
-    pub fn remove(&mut self, id: ID) {
+    pub fn remove(&mut self, id: ID) -> Option<String> {
         self.db.remove(id)
     }
 }

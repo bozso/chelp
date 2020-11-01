@@ -53,12 +53,12 @@ where
     fn get(&self, id: ID) -> Option<&Self::Entry> {
         self.db.get(id)
     }
-    
+
     fn insert(&mut self, id: ID, entry: Self::Entry) {
         self.db.insert(id, entry)
     }
     
-    fn remove(&mut self, id: ID) {
+    fn remove(&mut self, id: ID) -> Option<Self::Entry> {
         self.db.remove(id)
     }
     

@@ -16,6 +16,8 @@ pub enum Error {
     String(#[from] string::Error),
     #[error("io error occurred: {0}")]
     IOError(#[from] std::io::Error),
+    #[error("io error occurred: {0}")]
+    CIOError(#[from] crate::io::Error),
 }
 
 /**

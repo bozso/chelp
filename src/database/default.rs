@@ -26,12 +26,6 @@ impl<T: Hash> std::default::Default for Default<T, RandomState> {
 }
 
 impl<T: Hash, B: BuildHasher> Default<T, B> {
-    fn insert_auto(&mut self, entry: T) -> u64 {
-        let id = self.calc_id(&entry);
-        self.insert(id, entry);
-        id
-    }
-    
     fn calc_id(&self, entry: &T) -> u64 {
         let mut hasher = self.builder.build_hasher();
         entry.hash(&mut hasher);
@@ -50,7 +44,7 @@ impl<T, B: BuildHasher> Database for Default<T, B> {
         self.base.get(id)
     }
 
-    fn remove(&mut self, id: service::ID) {
+    fn remove(&mut self, id: service::ID) -> Option<Self::Entry>{
         self.base.remove(id)
     }
     
@@ -61,9 +55,7 @@ impl<T, B: BuildHasher> Database for Default<T, B> {
 
 impl<T: Hash, B: BuildHasher> AutoHash for Default<T, B> {
     fn insert_auto(&mut self, entry: Self::Entry) -> u64 {
-        let mut hasher = self.builder.build_hasher();
-        entry.hash(&mut hasher);
-        let id = hasher.finish();
+        let id = self.calc_id(&entry);
 
         self.base.insert(id, entry);
         id

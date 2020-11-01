@@ -18,6 +18,8 @@ use crate::{
 pub enum Error {
     #[error("io error: {0}")]
     IOError(#[from] std::io::Error),
+    #[error("database error: {0}")]
+    DBError(#[from] crate::database::Error),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -46,16 +48,30 @@ where
     B: hash::BuildHasher,
     DB: Database<Entry = std::fs::File>
 {
-    pub fn open<P: HashPath>(&mut self, path: P) -> Result<ID> {
+    pub fn open<P>(&mut self, path: P) -> Result<ID>
+    where
+        P: AsRef<Path> + hash::Hash
+    {
         Ok(self.indir.lazy_insert(
             &Creator{path: path, mode: Mode::Open})?
         )
     }
 
-    pub fn create<P: HashPath>(&mut self, path: P) -> Result<ID> {
+    pub fn create<P>(&mut self, path: P) -> Result<ID>
+    where
+        P: AsRef<Path> + hash::Hash
+    {
         Ok(self.indir.lazy_insert(
             &Creator{path: path, mode: Mode::Create})?
         )
+    }
+
+    pub fn must_get(&self, id: ID) -> Result<&File> {
+        self.indir.must_get(id).map_err(Error::DBError)
+    }
+
+    pub fn must_remove(&mut self, id: ID) -> Result<File> {
+        self.indir.must_remove(id).map_err(Error::DBError)
     }
 }
 
@@ -65,15 +81,16 @@ pub enum Mode {
     Open,
 }
 
-pub trait HashPath : AsRef<Path> + hash::Hash {}
-
 #[derive(Debug, Hash)]
 pub struct Creator<P> {
     path: P,
     mode: Mode,
 }
 
-impl<P: HashPath> crate::database::Creator for Creator<P> {
+impl<P> crate::database::Creator for Creator<P>
+where
+    P: AsRef<Path> + hash::Hash
+{
     type Entry = File;
     type Error = std::io::Error;
     
