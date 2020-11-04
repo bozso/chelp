@@ -1,23 +1,13 @@
 use crate::{
-    Error as LibError,
-    string,
     service
 };
 
-//pub struct LockFail;
-
-use thiserror::Error as TError;
-
-#[derive(TError, Debug)]
+#[derive(thiserror::Error, Debug)]
 pub enum Error {
     #[error("failed to lock service structure")]
     LockFail,
-    #[error("error while managing strings: {0}")]
-    String(#[from] string::Error),
-    #[error("io error occurred: {0}")]
-    IOError(#[from] std::io::Error),
-    #[error("io error occurred: {0}")]
-    CIOError(#[from] crate::io::Error),
+    #[error("error from service: {0}")]
+    Service(#[from] service::Error),
 }
 
 /**
@@ -29,5 +19,5 @@ impl Into<service::ID> for Error {
     }
 }
 
-impl LibError for Error {}
+impl crate::Error for Error {}
 

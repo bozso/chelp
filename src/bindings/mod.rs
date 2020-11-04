@@ -38,11 +38,11 @@ pub extern fn chelp_get_version() -> VersionInfo {
     VERSION.clone()
 }
 
-static SERV: Lazy<Mutex<service::DefaultService>> = Lazy::new(
-    || { Mutex::new(service::DefaultService::default())}
+static SERV: Lazy<Mutex<service::Default>> = Lazy::new(
+    || { Mutex::new(service::Default::default())}
 );
 
-fn lock<'a>() -> Result<MutexGuard<'a, service::DefaultService>> {
+fn lock<'a>() -> Result<MutexGuard<'a, service::Default>> {
     SERV.lock().map_err(|_| Error::LockFail)    
 }
 
@@ -54,17 +54,21 @@ fn do_it<F: FnMut() -> Result<()>>(mut func: F) -> CResult {
     func().into()
 }
 
+/**
+ * Intern the string pointed to by `ptr` into the database. Returns the
+ * id of the string.
+ */
 #[no_mangle]
 pub extern fn chelp_string_intern(ptr: *const c_char) -> CResult {
     do_id(|| {
-        lock()?.string_service.put(ptr).map_err(Error::String)
+        lock()?.string_service.put(ptr).map_err(Error::Service)
     })
 }
 
 #[no_mangle]
 pub extern fn chelp_string_concat(one: ID, two: ID) -> CResult {
     do_id(|| {
-        lock()?.string_service.concat(one, two).map_err(Error::String)
+        lock()?.string_service.concat(one, two).map_err(Error::Service)
     })
 }
 
@@ -83,7 +87,7 @@ pub extern fn chelp_file_open(ptr: *const c_char) -> CResult {
         lock()?
             .file_service
             .open(s.to_string_lossy().into_owned())
-            .map_err(Error::CIOError)
+            .map_err(Error::Service)
     })
 }
 
@@ -99,6 +103,6 @@ pub extern fn chelp_file_close(id: ID) -> CResult {
 pub extern fn chelp_dump_db() -> CResult {
     do_it(|| {
         write!(std::io::stdout(), "Database: {:?}\n", lock()?)
-            .map_err(|e| Error::IOError(e))
+                .map_err(|e| Error::Service(e.into()))
     })
 }

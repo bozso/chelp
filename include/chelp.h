@@ -25,6 +25,9 @@ typedef struct {
 
 VersionInfo chelp_get_version(void);
 
+/**
+ *  * Intern the string pointed to by `ptr` into the database. Returns the  * id of the string.
+ */
 CResult chelp_string_intern(const char *ptr);
 
 CResult chelp_string_concat(ID one, ID two);

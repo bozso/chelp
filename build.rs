@@ -1,5 +1,4 @@
 use std::{
-    //ffi::OsStr,
     env,
     path::{PathBuf, Path},
     convert::AsRef,
@@ -33,6 +32,7 @@ fn run() -> Result<(), Error> {
         .with_language(cbindgen::Language::C)
         .generate()?
         .write_to_file(join(&[INCLUDE_DIR, "chelp.h"]));
+
     
     /*
     cc::Build::new()
