@@ -12,7 +12,7 @@ path = "src/lib.rs"
 [dependencies]
 thiserror = "1.0"
 once_cell = { version = "1.4" }
-
+hecs = {version = "0.3" }
 #[dev-dependencies]
 
 [build-dependencies]
