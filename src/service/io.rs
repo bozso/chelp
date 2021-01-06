@@ -7,17 +7,14 @@ use std::{
 };
 
 use crate::{
-    database::{
-        Database,
-        indirect::Indirect,
-    },
+    database as db,
     service::{ID, Result, Error},
 };
 
 
 #[derive(Debug)]
 pub struct Service<B, DB> {
-    indir: Indirect<File, B, DB>,
+    indir: db::Indirect<File, B, DB>,
 }
 
 impl<B, DB> Service<B, DB> {

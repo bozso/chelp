@@ -5,34 +5,23 @@ use std::{
 };
 
 use crate::{
-    database::{Database, Creator},
+    database as db,
     service::ID,
 };
 
 #[derive(Debug)]
-pub struct Indirect<T, B, DB> {
-    builder: B,
+pub struct Indirect<KC, K, V, DB> {
+    KeyCalculator: KC,
     db: DB,
-    t: PhantomData<T>,
+    t: PhantomData<(K, V)>,
 }
 
-impl<T, B, DB> Indirect<T, B, DB>
+impl<KC, K, V, DB> Indirect<KC, K, V, DB>
 where
-    B: BuildHasher,
+    KC: db::key::Calculator,
+    DB: db::AutoHash<V>
 {
-    pub fn calc_id<H: Hash>(&self, h: &H) -> u64 {
-        let mut hasher = self.builder.build_hasher();
-        h.hash(&mut hasher);
-        hasher.finish()
-    }
-}
-
-impl<T, B, DB> Indirect<T, B, DB>
-where
-    B: BuildHasher,
-    DB: Database<Entry = T>
-{
-    pub fn lazy_insert<C: Creator<Entry = T>>(&mut self, c: &C) -> Result<u64, <C as Creator>::Error> {
+    pub fn lazy_insert<C: db::Creator<Entry = T>>(&mut self, c: &C) -> Result<u64, <C as db::Creator>::Error> {
         let id = self.calc_id(c);
         
         if !self.db.contains(id) {
@@ -43,27 +32,28 @@ where
     }
 }
 
-impl<T, B, DB> Database for Indirect<T, B, DB>
+impl<KC, K, V, DB> db::Like for Indirect<KC, K, V,  DB>
 where
-    B: BuildHasher,
-    DB: Database<Entry = T>
+    KC: db::key::Calculator<Key = K, Value = V>,
+    DB: db::Generic<K, V>
 {
-    type Entry = T;
+    type Key = K;
+    type Value = V;
 
-    fn get(&self, id: ID) -> Option<&Self::Entry> {
-        self.db.get(id)
+    fn get(&self, key: &K) -> Option<&V> {
+        self.db.get(key)
     }
 
-    fn insert(&mut self, id: ID, entry: Self::Entry) {
-        self.db.insert(id, entry)
+    fn insert(&mut self, key: &K, entry: V) {
+        self.db.insert(key, entry)
     }
     
-    fn remove(&mut self, id: ID) -> Option<Self::Entry> {
-        self.db.remove(id)
+    fn remove(&mut self, key: &K) -> Option<V> {
+        self.db.remove(key)
     }
     
-    fn contains(&self, id: ID) -> bool {
-        self.db.contains(id)
+    fn contains(&self, key: &K) -> bool {
+        self.db.contains(key)
     }
 }
 

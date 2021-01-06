@@ -22,7 +22,7 @@ impl<DB> Service<DB> {
     }
 }
 
-impl<DB: db::AutoHash<Entry = String>> Service<DB> {
+impl<DB: db::AutoHash<String>> Service<DB> {
     pub fn put(&mut self, ptr: *const c_char) -> Result<ID> {
         let cstr = unsafe { CStr::from_ptr(ptr) };
         Ok(self.db.insert_auto(cstr.to_string_lossy().into_owned()))

@@ -2,13 +2,12 @@ use std::{
     hash::Hash,
 };
 
-mod base;
-pub mod indirect;
-pub mod default;
+mod indirect;
+pub mod key;
 
-pub use base::Base;
+pub use indirect::Indirect;
 
-use crate::service::ID;
+use super::service::ID as id;
 
 /**
  * An trait that can be used to delay the creation of a database entry.
@@ -16,12 +15,13 @@ use crate::service::ID;
 pub trait Creator: Hash {
     /// The result of creation.
     type Entry;
-    /// A possible error from creatio.
+    /// A possible error from creation.
     type Error: std::error::Error;
     
     /// The function that creates the database entry.
     fn create(&self) -> Result<Self::Entry, Self::Error>;
 }
+
 
 /**
  * Aggregate error for this module. At the moment it only contains
@@ -29,58 +29,60 @@ pub trait Creator: Hash {
  */
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-    #[error("entry not found {0}")]
-    EntryNotFound(ID),
+    #[error("no entry not found with key{0}")]
+    EntryNotFound(Box<dyn std::fmt::Debug>),
 }
 
-impl Into<ID> for Error {
-    fn into(self) -> ID {
+impl Into<id> for Error {
+    fn into(self) -> id {
         match self {
             Self::EntryNotFound(_) => 1,
         }
     }
 }
 
-/**
- * 
- */
-pub trait Database {
-    /// The type that is stored in the database.
-    type Entry;
-    
-    /// Get a database entry based on ID.
-    fn get(&self, id: ID) -> Option<&Self::Entry>;
-    
-    /// Insert an entry to the database.
-    fn insert(&mut self, id: ID, entry: Self::Entry);
-    
-    /// Remove an entry from the database.
-    fn remove(&mut self, id: ID) -> Option<Self::Entry>;
-    
-    /// Check if an entry is contained in the database.
-    fn contains(&self, id: ID) -> bool;
-    
-    /**
-     * A convenience function to map an empty `Option` to an
-     * error.
-     */
-    fn must_get(&self, id: ID) -> Result<&Self::Entry, Error> {
-        self.get(id).ok_or(Error::EntryNotFound(id))
-    }
+pub trait Like {
+    type Key;
+    type Value;
+
+    fn get(&self, key: &Self::Key) -> Option<&Self::Value>;
 
     /**
      * A convenience function to map an empty `Option` to an
      * error.
      */
-    fn must_remove(&mut self, id: ID) -> Result<Self::Entry, Error> {
-        self.remove(id).ok_or(Error::EntryNotFound(id))
+    fn must_get(&self, key: &Self::Key) -> Result<&Self::Value, Error> {
+        self.get(key).ok_or(Error::EntryNotFound(key))
     }
+    ///
+    /// Insert an entry to the database.
+    fn insert(&mut self, key: &Self::Key, entry: Self::Value);
+
+    /// Remove an entry from the database.
+    fn remove(&mut self, key: &Self::Key) -> Option<Self::Value>;
+
+    /**
+     * A convenience function to map an empty `Option` to an
+     * error.
+     */
+    fn must_remove(&mut self, key: &Self::Key) -> Result<Self::Value, Error> {
+        self.remove(key).ok_or(Error::EntryNotFound(key))
+    }
+
+    /// Check if an entry is contained in the database.
+    fn contains(&self, key: &Self::Key) -> bool;
 }
 
+
+pub trait Generic<K, V> : Like<Key = K, Value = V> {}
+
+/// Specialized version of the `Generic` trait with `ID` used as key.
+pub trait ID<Entry> : Generic<id, Entry> {}
+
 /**
- * A subtype of database that can calculate the `ID` of an entry
+ * A subtype of `ID` that can calculate the `ID` of an entry
  * based on its hash value.
  */
-pub trait AutoHash: Database {
-    fn insert_auto(&mut self, entry: Self::Entry) -> ID;
+pub trait AutoHash<Entry>: ID<Entry> {
+    fn insert_auto(&mut self, entry: Entry) -> id;
 }

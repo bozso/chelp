@@ -5,56 +5,22 @@ use std::{
 
 use crate::{
     service,
-    database::{
-        default,
-        Base,
-        Database,
-        indirect
-    },
+    database as db,
 };
 
 #[derive(Debug)]
-pub struct Service<B, S, F>
+pub struct Service<DB>
 {
-    pub string_service: service::string::Service<S>,
-    pub file_service: service::io::Service<B, F>,
+    pub string_service: service::string::Service<DB>,
+    pub file_service: service::io::Service<DB>,
 }
 
-impl<B, S, F> Service<B, S, F>
-where
-    B: BuildHasher,
-    S: Database<Entry = String>,
-    F: Database<Entry = std::fs::File>,
+impl<DB: db::AutoHash> Service<DB>
 {
-    pub fn new(b: B, s: S, f: F) -> Self {
+    pub fn new(db: DB) -> Self {
         Self {
-            string_service: service::string::Service::new(s),
-            file_service: service::io::Service::new(
-                indirect::Indirect::new(b, f)
-            ),
+            string_service: service::string::Service::new(db),
+            file_service: service::io::Service::new(db),
         }
     }
 }
-
-pub type Default = Service<RandomState, 
-    default::Default::<String>,
-    Base::<std::fs::File>,
->;
-
-impl std::default::Default for Default {
-    fn default() -> Self {
-        Self::new(
-            std::collections::hash_map::RandomState::new(),
-            default::Default::<String>::default(),
-            Base::<std::fs::File>::new(),
-        )
-    }
-}
-
-/*
-impl<default::Default::<String>> Default for Service<default::Default::<String>> {
-    fn default() -> Self {
-        Self::new(default::Default::<String>::default())
-    }
-}
-*/
