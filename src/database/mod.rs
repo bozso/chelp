@@ -2,14 +2,14 @@ use std::{
     hash::Hash,
 };
 
-mod indirect;
 mod unique;
+pub mod indirect;
 pub mod key;
 
 pub use indirect::Indirect;
 pub use unique::Unique;
 
-use super::service::ID as id;
+use super::service::ID as service_id;
 
 /**
  * An trait that can be used to delay the creation of a database entry.
@@ -24,7 +24,7 @@ pub trait Creator: Hash {
     fn create(&self) -> Result<Self::Entry, Self::Error>;
 }
 
-pub trait CError : std::error::Error + Into<id> {}
+pub trait CError : std::error::Error + Into<service_id> {}
 
 
 /**
@@ -37,8 +37,8 @@ pub enum Error {
     EntryNotFound(Box<dyn std::fmt::Debug>),
 }
 
-impl Into<id> for Error {
-    fn into(self) -> id {
+impl Into<service_id> for Error {
+    fn into(self) -> service_id {
         match self {
             Self::EntryNotFound(_) => 1,
         }
@@ -77,16 +77,24 @@ pub trait Like {
     fn contains(&self, key: &Self::Key) -> bool;
 }
 
+/**
+ * Variant of databases that use `Type` (alies `u64`) as key.
+ */
+pub mod id {
+    pub type Type = super::service_id;
+    pub type Indirect<KC, V, DB, C> = super::Indirect<KC, Type, V, DB, C>;
+
+    /// Specialized version of the `Generic` trait with `ID::Type` used as key.
+    pub trait Generic<V> : super::Generic<Type, V> {}
+}
 
 pub trait Generic<K, V> : Like<Key = K, Value = V> {}
 
-/// Specialized version of the `Generic` trait with `ID` used as key.
-pub trait ID<Entry> : Generic<id, Entry> {}
 
 /**
  * A subtype of `ID` that can calculate the `ID` of an entry
  * based on its hash value.
  */
-pub trait AutoHash<Entry>: ID<Entry> {
-    fn insert_auto(&mut self, entry: Entry) -> id;
+pub trait AutoHash<Entry> : id::Generic<Entry> {
+    fn insert_auto(&mut self, entry: Entry) -> id::Type;
 }
