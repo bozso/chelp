@@ -20,14 +20,14 @@ where
     KC: db::key::Calculator<Key = K, Value = C>,
     DB: db::Generic<K, V>
 {
-    pub fn lazy_insert(&mut self, c: &C) -> Result<u64, C::Error> {
-        let id = self.key_calculator.calc_key(c);
+    pub fn lazy_insert(&mut self, c: &C) -> Result<K, C::Error> {
+        let key = self.key_calculator.calc_key(c);
         
-        if !self.db.contains(id) {
-            self.db.insert(id, c.create()?)
+        if !self.db.contains(key) {
+            self.db.insert(key, c.create()?)
         }
         
-        Ok(id)
+        Ok(key)
     }
 }
 
