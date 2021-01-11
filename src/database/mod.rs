@@ -3,9 +3,11 @@ use std::{
 };
 
 mod indirect;
+mod unique;
 pub mod key;
 
 pub use indirect::Indirect;
+pub use unique::Unique;
 
 use super::service::ID as id;
 
