@@ -1,28 +1,27 @@
 use std::{
     marker::PhantomData,
-    hash::{BuildHasher, Hasher, Hash},
     collections::hash_map::RandomState,
 };
 
 use crate::{
     database as db,
-    service::ID,
 };
 
 #[derive(Debug)]
-pub struct Indirect<KC, K, V, DB> {
+pub struct Indirect<KC, K, V, DB, C> {
     KeyCalculator: KC,
     db: DB,
-    t: PhantomData<(K, V)>,
+    t: PhantomData<(K, V, C)>,
 }
 
-impl<KC, K, V, DB> Indirect<KC, K, V, DB>
+impl<KC, K, V, DB, C> Indirect<KC, K, V, DB, C>
 where
-    KC: db::key::Calculator,
-    DB: db::AutoHash<V>
+    C: db::Creator<Entry = V>,
+    KC: db::key::Calculator<Key = K, Value = C>,
+    DB: db::Generic<K, V>
 {
-    pub fn lazy_insert<C: db::Creator<Entry = T>>(&mut self, c: &C) -> Result<u64, <C as db::Creator>::Error> {
-        let id = self.calc_id(c);
+    pub fn lazy_insert(&mut self, c: &C) -> Result<u64, C::Error> {
+        let id = self.key_calculator.calc_key(c);
         
         if !self.db.contains(id) {
             self.db.insert(id, c.create()?)
@@ -32,9 +31,10 @@ where
     }
 }
 
-impl<KC, K, V, DB> db::Like for Indirect<KC, K, V,  DB>
+impl<KC, K, V, DB, C> db::Like for Indirect<KC, K, V, DB, C>
 where
-    KC: db::key::Calculator<Key = K, Value = V>,
+    C: db::Creator<Entry = V>,
+    KC: db::key::Calculator<Key = K, Value = C>,
     DB: db::Generic<K, V>
 {
     type Key = K;
@@ -57,19 +57,19 @@ where
     }
 }
 
-pub type Default<T, DB> = Indirect<T, RandomState, DB>;
+pub type Default<K, V, DB, C> = Indirect<RandomState, K, V, C, DB>;
 
-impl<T, B, DB> Indirect<T, B, DB> {
-    pub fn new(b: B, db: DB) -> Self {
+impl<KC, K, V, C, DB> Indirect<KC, K, V, C, DB> {
+    pub fn new(key_calculator: KC, db: DB) -> Self {
         Self {
-            builder: b,
+            key_calculator: key_calculator,
             db: db,
-            t: PhantomData,            
+            t: PhantomData,
         }
     }
 }
 
-impl<T, DB: Database> Indirect<T, RandomState, DB> {
+impl<KC, K, V, C, DB> Indirect<KC, K, V, C, DB> {
     pub fn with_db(db: DB) -> Self {
         Self::new(RandomState::new(), db)
     }

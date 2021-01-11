@@ -22,6 +22,8 @@ pub trait Creator: Hash {
     fn create(&self) -> Result<Self::Entry, Self::Error>;
 }
 
+pub trait CError : std::error::Error + Into<id> {}
+
 
 /**
  * Aggregate error for this module. At the moment it only contains
@@ -29,7 +31,7 @@ pub trait Creator: Hash {
  */
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-    #[error("no entry not found with key{0}")]
+    #[error("no entry not found with key {0}")]
     EntryNotFound(Box<dyn std::fmt::Debug>),
 }
 
@@ -54,7 +56,7 @@ pub trait Like {
     fn must_get(&self, key: &Self::Key) -> Result<&Self::Value, Error> {
         self.get(key).ok_or(Error::EntryNotFound(key))
     }
-    ///
+
     /// Insert an entry to the database.
     fn insert(&mut self, key: &Self::Key, entry: Self::Value);
 
