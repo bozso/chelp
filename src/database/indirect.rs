@@ -9,7 +9,7 @@ use crate::{
 
 #[derive(Debug)]
 pub struct Indirect<KC, K, V, DB, C> {
-    KeyCalculator: KC,
+    key_calculator: KC,
     db: DB,
     t: PhantomData<(K, V, C)>,
 }
@@ -23,8 +23,8 @@ where
     pub fn lazy_insert(&mut self, c: &C) -> Result<K, C::Error> {
         let key = self.key_calculator.calc_key(c);
         
-        if !self.db.contains(key) {
-            self.db.insert(key, c.create()?)
+        if !self.db.contains(&key) {
+            self.db.insert(&key, c.create()?)
         }
         
         Ok(key)
@@ -57,9 +57,15 @@ where
     }
 }
 
-pub type Default<K, V, DB, C> = Indirect<RandomState, K, V, C, DB>;
+pub type Default<K, V, DB, C> = Indirect<
+    db::key::DefaultWrapHasher<C>,
+    K,
+    V,
+    C,
+    DB
+>;
 
-impl<KC, K, V, C, DB> Indirect<KC, K, V, C, DB> {
+impl<KC, K, V, DB, C> Indirect<KC, K, V, DB, C> {
     pub fn new(key_calculator: KC, db: DB) -> Self {
         Self {
             key_calculator: key_calculator,
@@ -69,8 +75,3 @@ impl<KC, K, V, C, DB> Indirect<KC, K, V, C, DB> {
     }
 }
 
-impl<KC, K, V, C, DB> Indirect<KC, K, V, C, DB> {
-    pub fn with_db(db: DB) -> Self {
-        Self::new(RandomState::new(), db)
-    }
-}

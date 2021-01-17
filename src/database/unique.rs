@@ -26,7 +26,7 @@ impl<S, DB, K, V> db::Like for Unique<S, DB, K, V>
 where
     S: db::Like<Key = V, Value = ()>,
     DB: db::Like<Key = K, Value = V>,
-    V: Copy,
+    V: Clone,
 {
     type Key = K;
     type Value = V;
@@ -35,15 +35,15 @@ where
         self.db.get(key)
     }
 
-    fn insert(&self, key: &K, value: V) {
-        if self.set.contains(value) {
+    fn insert(&mut self, key: &K, value: V) {
+        if self.set.contains(&value) {
             return
         }
-        self.db.insert(key, value.copy());
-        self.set.insert(value);
+        self.db.insert(key, value.clone());
+        self.set.insert(&value, ());
     }
 
-    fn remove(&self, key: &K) -> Option<V> {
+    fn remove(&mut self, key: &K) -> Option<V> {
         self.db.remove(key).map(|v| {
             self.set.remove(v)
         })

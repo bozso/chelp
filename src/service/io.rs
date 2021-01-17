@@ -44,18 +44,20 @@ pub struct Service<KC, DB, C> {
 }
 
 impl<KC, DB, C> Service<KC, DB, C> {
-    pub fn new(db: DB) -> Self 
+    pub fn new(key_calculator: KC, db: DB) -> Self 
     where
-        DB: db::id::Generic<File>
+        KC: db::key::Calculator<Key = C>,
+        DB: db::id::Generic<std::fs::File>
     {
         Self {
-            indir: db::id::Indirect::new(db),
+            indir: db::id::Indirect::new(key_calculator, db),
         }
     }
 }
 
 impl<KC, DB, C> Service<KC, DB, C>
 where
+    KC: db::key::Calculator<Key = C>,
     DB: db::id::Generic<std::fs::File>
 {
     pub fn open<P>(&mut self, path: P) -> Result<ID>
@@ -77,4 +79,8 @@ where
     }
 }
 
-
+pub type Default<DB, P> = Service<
+    db::key::DefaultWrapHasher<Creator<P>>, 
+    DB, 
+    Creator<P>
+>;

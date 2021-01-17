@@ -1,5 +1,6 @@
 use std::{
-    hash::BuildHasher,
+    hash::{BuildHasher, Hash, Hasher},
+    collections::hash_map::{DefaultHasher, RandomState},
     marker::PhantomData,
 };
 
@@ -7,15 +8,15 @@ pub trait Calculator {
     type Key;
     type Value;
 
-    fn calc_key(&self, v: &Self::Value) -> &Self::Key;
+    fn calc_key(&self, v: &Self::Value) -> Self::Key;
 }
 
-pub struct Hasher<B, T> {
+pub struct WrapHasher<H, B, T> {
     builder: B,
-    phantom: PhantomData<T>,
+    phantom: PhantomData<(H, T)>,
 }
 
-impl<B, T> Hasher<B, T> {
+impl<H, B, T> WrapHasher<H, B, T> {
     pub fn new(builder: B) -> Self {
         Self {
             builder: builder,
@@ -24,7 +25,12 @@ impl<B, T> Hasher<B, T> {
     }
 }
 
-impl<B: BuildHasher, T> Calculator for Hasher<B, T> {
+impl<H, B, T> Calculator for WrapHasher<H, B, T>
+where
+    H: Hasher,
+    B: BuildHasher<Hasher=H>,
+    T: Hash
+{
     type Key = u64;
     type Value = T;
 
@@ -32,5 +38,13 @@ impl<B: BuildHasher, T> Calculator for Hasher<B, T> {
         let mut hasher = self.builder.build_hasher();
         v.hash(&mut hasher);
         hasher.finish()
+    }
+}
+
+pub type DefaultWrapHasher<T> = WrapHasher<DefaultHasher, RandomState, T>;
+
+impl<T> std::default::Default for WrapHasher<DefaultHasher, RandomState, T> {
+    fn default() -> Self {
+        Self::new(RandomState::new())
     }
 }

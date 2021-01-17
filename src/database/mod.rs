@@ -56,7 +56,7 @@ pub trait Like {
      * error.
      */
     fn must_get(&self, key: &Self::Key) -> Result<&Self::Value, Error> {
-        self.get(key).ok_or(Error::EntryNotFound(key))
+        self.get(key).ok_or(Error::EntryNotFound(Box::new(key)))
     }
 
     /// Insert an entry to the database.
