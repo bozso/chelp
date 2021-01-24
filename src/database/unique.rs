@@ -43,10 +43,17 @@ where
         self.set.insert(&value, ());
     }
 
+    fn contains(&self, key: &K) -> bool {
+        self.db.contains(key)
+    }
+
     fn remove(&mut self, key: &K) -> Option<V> {
-        self.db.remove(key).map(|v| {
-            self.set.remove(v)
-        })
+        if let Some(v) = self.db.remove(key) {
+            self.set.remove(&v);
+            Some(v)
+        } else {
+            None
+        }
     }
 }
 
