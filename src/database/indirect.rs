@@ -1,6 +1,5 @@
 use std::{
     marker::PhantomData,
-    collections::hash_map::RandomState,
 };
 
 use crate::{

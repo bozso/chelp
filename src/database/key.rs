@@ -11,6 +11,24 @@ pub trait Calculator {
     fn calc_key(&self, v: &Self::Value) -> Self::Key;
 }
 
+/*
+impl<B, H, V> Calculator for B 
+where
+    B: BuildHasher<Hasher=H>,
+    V: Hash,
+{
+    type Key = u64;
+    type Value = V;
+
+    fn calc_key(&self, v: &Self::Value) -> Self::Key {
+        let mut hasher = self.build_hasher();
+        v.hash(&mut hasher);
+        hasher.finish()
+
+    }
+}
+*/
+
 pub struct WrapHasher<H, B, T> {
     builder: B,
     phantom: PhantomData<(H, T)>,
