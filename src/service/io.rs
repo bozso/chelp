@@ -8,7 +8,7 @@ use std::{
 
 use crate::{
     database::{self as db, Like},
-    service::{ID, Result},
+    service::{ID},
 };
 
 #[derive(Debug, Hash)]
@@ -21,26 +21,37 @@ pub enum Mode {
 pub trait Service
 {
     type Path: AsRef<Path>;
+    type Error;
 
-    fn open(&mut self, path: Self::Path) -> Result<ID>;
-    fn create(&mut self, path: Self::Path) -> Result<ID>;
-    fn close(&mut self, id: &ID) -> Result<()>;
+    fn open(&mut self, path: Self::Path) -> Result<ID, Self::Error>;
+    fn create(&mut self, path: Self::Path) -> Result<ID, Self::Error>;
+    fn close(&mut self, id: &ID) -> Result<(), Self::Error>;
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum Error<K: std::fmt::Debug> {
+    #[error("io error: {0}")]
+    IO(#[from] std::io::Error),
+    #[error("failed to close file: {0}")]
+    CloseFail(db::Error<K>),
 }
 
 #[derive(Debug, Hash)]
-pub struct Creator<P> {
+pub struct Creator<P, K> {
     path: P,
     mode: Mode,
+    tag: PhantomData<K>,
 }
 
-impl<P> db::Creator for Creator<P>
+
+impl<P, K> db::Creator for Creator<P, K>
 where
     P: AsRef<Path> + hash::Hash
 {
     type Entry = File;
-    type Error = std::io::Error;
+    type Error = Error<K>;
     
-    fn create(&self) -> std::result::Result<Self::Entry, Self::Error> {
+    fn create(&self) -> Result<Self::Entry, Self::Error> {
         match self.mode {
             Mode::Create => File::create(&self.path),
             Mode::Open => File::open(&self.path),
@@ -108,28 +119,31 @@ impl<KC, DB, P, C> Impl<KC, DB, P, C> {
 }
 
 
-impl<KC, DB, P> Service for Impl<KC, DB, P, Creator<P>>
+impl<KC, DB, P> Service for Impl<KC, DB, P, Creator<P, u64>>
 where
-    KC: db::key::Calculator<Key = u64, Value = Creator<P>>,
+    KC: db::key::Calculator<Key = u64, Value = Creator<P, u64>>,
     DB: db::Generic<u64, File>,
     P: AsRef<Path> + hash::Hash
 {
     type Path = P;
+    type Error = <Creator<P, u64> as db::Creator>::Error;
 
-    fn open(&mut self, path: P) -> Result<ID> {
+    fn open(&mut self, path: P) -> Result<ID, Self::Error> {
         Ok(self.indir.lazy_insert(
             &Creator{path: path, mode: Mode::Open})?
         )
     }
 
-    fn create(&mut self, path: P) -> Result<ID> {
+    fn create(&mut self, path: P) -> Result<ID, Self::Error> {
         Ok(self.indir.lazy_insert(
             &Creator{path: path, mode: Mode::Create})?
         )
     }
 
-    fn close(&mut self, id: &ID) -> Result<()> {
-        self.indir.remove(id);
-        Ok(())
+    fn close(&mut self, id: &ID) -> Result<(), Self::Error> {
+        match self.indir.remove(id).ok_or() {
+            Some(_) => Ok(()),
+            None => Error::CloseFail(db::Error::EntryNotFound(id)),
+        }
     }
 }

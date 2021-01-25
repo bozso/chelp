@@ -32,12 +32,12 @@ pub trait CError : std::error::Error + Into<service_id> {}
  * the error for missing database entry.
  */
 #[derive(thiserror::Error, Debug)]
-pub enum Error {
+pub enum Error<T: std::fmt::Debug> {
     #[error("no entry not found with key {0}")]
-    EntryNotFound(Box<dyn std::fmt::Debug>),
+    EntryNotFound(T),
 }
 
-impl Into<service_id> for Error {
+impl<T> Into<service_id> for Error<T> {
     fn into(self) -> service_id {
         match self {
             Self::EntryNotFound(_) => 1,
@@ -55,8 +55,8 @@ pub trait Like {
      * A convenience function to map an empty `Option` to an
      * error.
      */
-    fn must_get(&self, key: &Self::Key) -> Result<&Self::Value, Error> {
-        self.get(key).ok_or(Error::EntryNotFound(Box::new(key)))
+    fn must_get(&self, key: &Self::Key) -> Result<&Self::Value, Error<Self::Key>> {
+        self.get(key).ok_or(Error::EntryNotFound(key))
     }
 
     /// Insert an entry to the database.
@@ -69,7 +69,7 @@ pub trait Like {
      * A convenience function to map an empty `Option` to an
      * error.
      */
-    fn must_remove(&mut self, key: &Self::Key) -> Result<Self::Value, Error> {
+    fn must_remove(&mut self, key: &Self::Key) -> Result<Self::Value, Error<Self::Key>> {
         self.remove(key).ok_or(Error::EntryNotFound(key))
     }
 
