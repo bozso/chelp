@@ -14,7 +14,7 @@ impl<SS, IOS> Service<SS, IOS> {
     pub fn new(ss: SS, ios: IOS) -> Self {
         Self {
             string_service: ss,
-            file_service: ios,
+            io_service: ios,
         }
     }
 }

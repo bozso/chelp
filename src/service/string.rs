@@ -30,12 +30,12 @@ impl<DB: db::AutoHash<String>> Service<DB> {
     
     pub fn concat(&mut self, one: ID, two: ID) -> Result<ID> {
         let concatted = 
-            self.db.must_get(one)?.to_owned() + self.db.must_get(two)?;
+            self.db.must_get(&one)?.to_owned() + self.db.must_get(&two)?;
         
         Ok(self.db.insert_auto(concatted))
     }
 
     pub fn remove(&mut self, id: ID) -> Option<String> {
-        self.db.remove(id)
+        self.db.remove(&id)
     }
 }
