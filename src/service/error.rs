@@ -5,7 +5,7 @@ const IO_ERROR: ID = 1;
 const CONVERSION_ERROR: ID = 2;
 
 #[derive(thiserror::Error, Debug)]
-pub enum Error<T: std::fmt::Debug> {
+pub enum Error<T: 'static + std::fmt::Debug> {
     #[error("io error: {0}")]
     IOError(#[from] std::io::Error),
     #[error("error while converting from pointer: {0}")]
@@ -14,7 +14,7 @@ pub enum Error<T: std::fmt::Debug> {
     DBError(#[from] crate::database::Error<T>),
 }
 
-impl<T> Into<ID> for Error<T> {
+impl<T: std::fmt::Debug> Into<ID> for Error<T> {
     fn into(self) -> ID {
         match self {
             Self::ConversionError(_) => CONVERSION_ERROR,

@@ -3,7 +3,7 @@ use crate::{
 };
 
 #[derive(thiserror::Error, Debug)]
-pub enum Error<T: std::fmt::Debug> {
+pub enum Error<T: 'static + std::fmt::Debug> {
     #[error("failed to lock service structure")]
     LockFail,
     #[error("error from service: {0}")]
@@ -13,11 +13,11 @@ pub enum Error<T: std::fmt::Debug> {
 /**
  * \TODO: properly handle different error types
  */
-impl<T> Into<service::ID> for Error<T> {
+impl<T: std::fmt::Debug> Into<service::ID> for Error<T> {
     fn into(self) -> service::ID {
         3
     }
 }
 
-impl<T> crate::Error for Error<T> {}
+impl<T: std::fmt::Debug> crate::Error for Error<T> {}
 

@@ -37,7 +37,7 @@ where
         self.db.get(key)
     }
 
-    fn insert(&mut self, key: &K, value: V) {
+    fn insert(&mut self, key: K, value: V) {
         if self.set.contains(&value) {
             return
         }

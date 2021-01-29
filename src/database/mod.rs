@@ -60,7 +60,7 @@ pub trait Like {
     }
 
     /// Insert an entry to the database.
-    fn insert(&mut self, key: &Self::Key, entry: Self::Value);
+    fn insert(&mut self, key: Self::Key, entry: Self::Value);
 
     /// Remove an entry from the database.
     fn remove(&mut self, key: &Self::Key) -> Option<Self::Value>;
@@ -104,6 +104,13 @@ where
         self.get(key)
     }
 
+    fn insert(&mut self, key: Self::Key, entry: Self::Value) {
+        self.insert(key, entry)
+    }
+
+    fn contains(&self, key: &Self::Key) -> bool {
+        self.contains_key(key)
+    }
 }
 
 impl<K, V, S> Generic<K, V> for HashMap<K, V, S>

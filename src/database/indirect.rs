@@ -45,7 +45,7 @@ where
         self.db.get(key)
     }
 
-    fn insert(&mut self, key: &K, entry: V) {
+    fn insert(&mut self, key: K, entry: V) {
         self.db.insert(key, entry)
     }
     
