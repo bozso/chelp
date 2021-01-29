@@ -25,7 +25,7 @@ pub struct VersionInfo {
     
 }
 
-pub type Result<T> = result::Result<T, Error>;
+pub type Result<T, K> = result::Result<T, Error<K>>;
 
 const VERSION: VersionInfo = VersionInfo{
     major: 0,
@@ -38,6 +38,12 @@ pub extern fn chelp_get_version() -> VersionInfo {
     VERSION.clone()
 }
 
+#[no_mangle]
+pub extern fn chelp_new_service() -> *mut service::Default {
+    Box::new(service::new_default())
+}
+
+/*
 static SERV: Lazy<Mutex<service::Default>> = Lazy::new(
     || { Mutex::new(service::Default::default())}
 );
@@ -53,6 +59,7 @@ fn do_id<F: FnMut() -> Result<ID>>(mut func: F) -> CResult {
 fn do_it<F: FnMut() -> Result<()>>(mut func: F) -> CResult {
     func().into()
 }
+*/
 
 /**
  * Intern the string pointed to by `ptr` into the database. Returns the

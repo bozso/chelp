@@ -25,6 +25,8 @@ typedef struct {
 
 VersionInfo chelp_get_version(void);
 
+Default *chelp_new_service(void);
+
 /**
  *  * Intern the string pointed to by `ptr` into the database. Returns the  * id of the string.
  */

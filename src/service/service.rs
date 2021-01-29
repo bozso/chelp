@@ -1,5 +1,5 @@
 use crate::{
-    service,
+    service as sv,
     database as db,
 };
 
@@ -18,3 +18,7 @@ impl<SS, IOS> Service<SS, IOS> {
         }
     }
 }
+
+type DefaultStr = sv::string::Impl<db::>;
+
+//pub type Default = Service<, sv::io::Impl>;

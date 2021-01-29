@@ -1,5 +1,5 @@
 use std::{
-    hash::Hash,
+    collections::HashMap,
 };
 
 mod unique;
@@ -14,7 +14,7 @@ use super::service::ID as service_id;
 /**
  * An trait that can be used to delay the creation of a database entry.
  */
-pub trait Creator: Hash {
+pub trait Creator: std::hash::Hash {
     /// The result of creation.
     type Entry;
     /// A possible error from creation.
@@ -37,7 +37,7 @@ pub enum Error<T: std::fmt::Debug> {
     EntryNotFound(T),
 }
 
-impl<T> Into<service_id> for Error<T> {
+impl<T: std::fmt::Debug> Into<service_id> for Error<T> {
     fn into(self) -> service_id {
         match self {
             Self::EntryNotFound(_) => 1,
@@ -46,7 +46,7 @@ impl<T> Into<service_id> for Error<T> {
 }
 
 pub trait Like {
-    type Key;
+    type Key: std::fmt::Debug;
     type Value;
 
     fn get(&self, key: &Self::Key) -> Option<&Self::Value>;
@@ -88,8 +88,28 @@ pub mod id {
     pub trait Generic<V> : super::Generic<Type, V> {}
 }
 
-pub trait Generic<K, V> : Like<Key = K, Value = V> {}
+pub trait Generic<K, V> : Like<Key = K, Value = V> 
+where
+    K: std::fmt::Debug,
+{}
 
+impl<K, V, S> Like for HashMap<K, V, S>
+where
+    K: std::fmt::Debug,
+{
+    type Key = K;
+    type Value = V;
+
+    fn get(&self, key: &Self::Key) -> Option<&Self::Value> {
+        self.get(key)
+    }
+
+}
+
+impl<K, V, S> Generic<K, V> for HashMap<K, V, S>
+where
+    K: std::fmt::Debug,
+{}
 
 /**
  * A subtype of `ID` that can calculate the `ID` of an entry

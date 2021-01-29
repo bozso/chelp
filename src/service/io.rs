@@ -46,6 +46,7 @@ pub struct Creator<P, K> {
 
 impl<P, K> db::Creator for Creator<P, K>
 where
+    K: std::fmt::Debug + hash::Hash,
     P: AsRef<Path> + hash::Hash
 {
     type Entry = File;

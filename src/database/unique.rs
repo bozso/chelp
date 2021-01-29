@@ -24,6 +24,8 @@ impl<S, DB, K, V> Unique<S, DB, K, V>{
 
 impl<S, DB, K, V> db::Like for Unique<S, DB, K, V>
 where
+    K: std::fmt::Debug,
+    V: std::fmt::Debug,
     S: db::Like<Key = V, Value = ()>,
     DB: db::Like<Key = K, Value = V>,
     V: Clone,

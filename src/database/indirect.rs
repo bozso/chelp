@@ -15,6 +15,7 @@ pub struct Indirect<KC, K, V, DB, C> {
 
 impl<KC, K, V, DB, C> Indirect<KC, K, V, DB, C>
 where
+    K: std::fmt::Debug,
     C: db::Creator<Entry = V>,
     KC: db::key::Calculator<Key = K, Value = C>,
     DB: db::Generic<K, V>
@@ -32,6 +33,7 @@ where
 
 impl<KC, K, V, DB, C> db::Like for Indirect<KC, K, V, DB, C>
 where
+    K: std::fmt::Debug,
     C: db::Creator<Entry = V>,
     KC: db::key::Calculator<Key = K, Value = C>,
     DB: db::Generic<K, V>
