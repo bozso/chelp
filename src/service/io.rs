@@ -37,20 +37,18 @@ pub enum Error<K: std::fmt::Debug> {
 }
 
 #[derive(Debug, Hash)]
-pub struct Creator<P, K> {
+pub struct Creator<P> {
     path: P,
     mode: Mode,
-    tag: PhantomData<K>,
 }
 
 
-impl<P, K> db::Creator for Creator<P, K>
+impl<P> db::Creator for Creator<P>
 where
-    K: std::fmt::Debug + hash::Hash,
     P: AsRef<Path> + hash::Hash
 {
     type Entry = File;
-    type Error = Error<K>;
+    type Error = std::io::Error;
     
     fn create(&self) -> Result<Self::Entry, Self::Error> {
         match self.mode {
@@ -61,25 +59,26 @@ where
 }
 
 #[derive(Debug)]
-pub struct Impl<KC, DB, P, C> {
+pub struct Impl<KC, K, DB, P, C> {
     indir: db::id::Indirect<KC, File, DB, C>,
-    tag: PhantomData<P>,
+    tag: PhantomData<(P, K)>,
 }
 
-impl<KC, DB, P, C> db::Like for Impl<KC, DB, P, C> 
+impl<KC, K, DB, P, C> db::Like for Impl<KC, K, DB, P, C> 
 where
-    KC: db::key::Calculator<Key = u64, Value = C>,
+    K: std::fmt::Debug,
+    KC: db::key::Calculator<Key = K, Value = C>,
     C: db::Creator<Entry = File>,
-    DB: db::Generic<u64, File>,
+    DB: db::Generic<K, File>,
 {
-    type Key = u64;
+    type Key = K;
     type Value = File;
 
     fn get(&self, key: &Self::Key) -> Option<&Self::Value> {
         self.indir.get(key)
     }
 
-    fn insert(&mut self, key: &Self::Key, val: Self::Value) {
+    fn insert(&mut self, key: Self::Key, val: Self::Value) {
         self.indir.insert(key, val)
     }
 
@@ -92,21 +91,22 @@ where
     }
 }
 
-impl<KC, DB, P, C> db::Generic<u64, File> for Impl<KC, DB, P, C> 
+impl<KC, K, DB, P, C> db::Generic<K, File> for Impl<KC, K, DB, P, C> 
 where
-    KC: db::key::Calculator<Key = u64, Value = C>,
+    K: std::fmt::Debug,
+    KC: db::key::Calculator<Key = K, Value = C>,
     C: db::Creator<Entry = File>,
-    DB: db::Generic<u64, File>,
+    DB: db::Generic<K, File>,
 {}
 
-impl<KC, DB, C, P> db::id::Generic<File> for Impl<KC, DB, P, C>
+impl<KC, DB, C, P> db::id::Generic<File> for Impl<KC, ID, DB, P, C>
 where
-    KC: db::key::Calculator<Key = u64, Value = C>,
+    KC: db::key::Calculator<Key = ID, Value = C>,
     C: db::Creator<Entry = File>,
-    DB: db::Generic<u64, File>,
+    DB: db::Generic<ID, File>,
 {}
 
-impl<KC, DB, P, C> Impl<KC, DB, P, C> {
+impl<KC, K, DB, P, C> Impl<KC, K, DB, P, C> {
     pub fn new(key_calculator: KC, db: DB) -> Self 
     where
         KC: db::key::Calculator<Key = C>,
@@ -120,14 +120,15 @@ impl<KC, DB, P, C> Impl<KC, DB, P, C> {
 }
 
 
-impl<KC, DB, P> Service for Impl<KC, DB, P, Creator<P, u64>>
+impl<KC, K, DB, P> Service for Impl<KC, K, DB, P, Creator<P>>
 where
-    KC: db::key::Calculator<Key = u64, Value = Creator<P, u64>>,
-    DB: db::Generic<u64, File>,
+    K: std::fmt::Debug,
+    KC: db::key::Calculator<Key = K, Value = Creator<P>>,
+    DB: db::Generic<K, File>,
     P: AsRef<Path> + hash::Hash
 {
     type Path = P;
-    type Error = <Creator<P, u64> as db::Creator>::Error;
+    type Error = Error<K>;
 
     fn open(&mut self, path: P) -> Result<ID, Self::Error> {
         Ok(self.indir.lazy_insert(
@@ -142,7 +143,7 @@ where
     }
 
     fn close(&mut self, id: &ID) -> Result<(), Self::Error> {
-        match self.indir.remove(id).ok_or() {
+        match self.indir.remove(id) {
             Some(_) => Ok(()),
             None => Error::CloseFail(db::Error::EntryNotFound(id)),
         }

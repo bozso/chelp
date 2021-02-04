@@ -56,7 +56,7 @@ pub trait Like {
      * error.
      */
     fn must_get(&self, key: &Self::Key) -> Result<&Self::Value, Error<Self::Key>> {
-        self.get(key).ok_or(Error::EntryNotFound(key))
+        self.get(key).ok_or(Error::EntryNotFound(*key))
     }
 
     /// Insert an entry to the database.
@@ -70,7 +70,7 @@ pub trait Like {
      * error.
      */
     fn must_remove(&mut self, key: &Self::Key) -> Result<Self::Value, Error<Self::Key>> {
-        self.remove(key).ok_or(Error::EntryNotFound(key))
+        self.remove(key).ok_or(Error::EntryNotFound(*key))
     }
 
     /// Check if an entry is contained in the database.
@@ -95,7 +95,8 @@ where
 
 impl<K, V, S> Like for HashMap<K, V, S>
 where
-    K: std::fmt::Debug,
+    K: std::fmt::Debug + std::cmp::Eq + std::hash::Hash,
+    S: std::hash::BuildHasher,
 {
     type Key = K;
     type Value = V;
@@ -105,7 +106,11 @@ where
     }
 
     fn insert(&mut self, key: Self::Key, entry: Self::Value) {
-        self.insert(key, entry)
+        self.insert(key, entry);
+    }
+
+    fn remove(&mut self, key: &Self::Key) -> Option<Self::Value> {
+        self.remove(key)
     }
 
     fn contains(&self, key: &Self::Key) -> bool {
@@ -115,7 +120,8 @@ where
 
 impl<K, V, S> Generic<K, V> for HashMap<K, V, S>
 where
-    K: std::fmt::Debug,
+    K: std::fmt::Debug + std::cmp::Eq + std::hash::Hash,
+    S: std::hash::BuildHasher,
 {}
 
 /**

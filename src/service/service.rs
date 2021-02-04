@@ -19,6 +19,6 @@ impl<SS, IOS> Service<SS, IOS> {
     }
 }
 
-type DefaultStr = sv::string::Impl<db::>;
+//type DefaultStr = sv::string::Impl<db::>;
 
 //pub type Default = Service<, sv::io::Impl>;

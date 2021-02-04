@@ -42,7 +42,7 @@ where
             return
         }
         self.db.insert(key, value.clone());
-        self.set.insert(&value, ());
+        self.set.insert(value, ());
     }
 
     fn contains(&self, key: &K) -> bool {

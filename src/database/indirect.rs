@@ -24,7 +24,7 @@ where
         let key = self.key_calculator.calc_key(c);
         
         if !self.db.contains(&key) {
-            self.db.insert(&key, c.create()?)
+            self.db.insert(key, c.create()?)
         }
         
         Ok(key)
@@ -57,6 +57,14 @@ where
         self.db.contains(key)
     }
 }
+
+impl<KC, K, V, DB, C> db::Generic<K, V> for Indirect<KC, K, V, DB, C>
+where
+    K: std::fmt::Debug,
+    C: db::Creator<Entry = V>,
+    KC: db::key::Calculator<Key = K, Value = C>,
+    DB: db::Generic<K, V>
+{}
 
 pub type Default<K, V, DB, C> = Indirect<
     db::key::DefaultWrapHasher<C>,
