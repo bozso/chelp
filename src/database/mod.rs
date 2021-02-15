@@ -93,6 +93,12 @@ where
     K: std::fmt::Debug,
 {}
 
+impl<T, K, V> Generic<K, V> for T
+where
+    T: Like<Key = K, Value = V>,
+    K: std::fmt::Debug,
+{}
+
 impl<K, V, S> Like for HashMap<K, V, S>
 where
     K: std::fmt::Debug + std::cmp::Eq + std::hash::Hash,
@@ -117,12 +123,6 @@ where
         self.contains_key(key)
     }
 }
-
-impl<K, V, S> Generic<K, V> for HashMap<K, V, S>
-where
-    K: std::fmt::Debug + std::cmp::Eq + std::hash::Hash,
-    S: std::hash::BuildHasher,
-{}
 
 /**
  * A subtype of `ID` that can calculate the `ID` of an entry

@@ -58,6 +58,7 @@ where
     }
 }
 
+/*
 impl<KC, K, V, DB, C> db::Generic<K, V> for Indirect<KC, K, V, DB, C>
 where
     K: std::fmt::Debug,
@@ -65,6 +66,7 @@ where
     KC: db::key::Calculator<Key = K, Value = C>,
     DB: db::Generic<K, V>
 {}
+*/
 
 pub type Default<K, V, DB, C> = Indirect<
     db::key::DefaultWrapHasher<C>,

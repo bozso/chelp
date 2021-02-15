@@ -91,14 +91,6 @@ where
     }
 }
 
-impl<KC, K, DB, P, C> db::Generic<K, File> for Impl<KC, K, DB, P, C> 
-where
-    K: std::fmt::Debug,
-    KC: db::key::Calculator<Key = K, Value = C>,
-    C: db::Creator<Entry = File>,
-    DB: db::Generic<K, File>,
-{}
-
 impl<KC, DB, C, P> db::id::Generic<File> for Impl<KC, ID, DB, P, C>
 where
     KC: db::key::Calculator<Key = ID, Value = C>,
